@@ -36,10 +36,7 @@ module.exports = router;
  *             type: object
  *             required:
  *               - player1
- *               - player2
- *             properties:
- *               player1:
- *                 type: string              
+ *               - player2             
  *     responses:
  *       201:
  *         description: The game was successfully created

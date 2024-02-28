@@ -1,10 +1,12 @@
 const express = require('express');
 const Game = require('../models/Game');
 const { initialBoard } = require('../consts/chessPieces');
+const { v4: uuidv4 } = require('uuid');
+
 
 exports.createGame = async (req, res) => {
     try {
-        const player1 = req.body.player1;
+        const player1 = uuidv4();
 
         const game = new Game({
             player1: player1,
@@ -12,6 +14,7 @@ exports.createGame = async (req, res) => {
         });
         console.log(game);
         await game.save();
+        
         res.status(201).json(game);
     } catch (err) {
         res.status(400).json({ message: err.message });

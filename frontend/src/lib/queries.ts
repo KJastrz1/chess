@@ -1,6 +1,14 @@
-import { useQuery } from "react-query";
-import { QUERY_KEYS } from "./queriesKeys";
-import { getGameById } from "./api";
+import { useMutation, useQuery } from "react-query";
+import { QUERY_KEYS } from "./keyQuery";
+import { createGame, getGameById } from "./api";
+
+export const useCreateGame = () => {
+   return useMutation(createGame, {
+         onSuccess: (data) => {
+              console.log(data);
+         },
+    });
+}
 
 export const useGetGameById = (gameId: string) => {
     return useQuery({

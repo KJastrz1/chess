@@ -1,6 +1,6 @@
 const express = require('express');
 const connectDB = require('./src/config/db');
-const swaggerJsdoc = require('swagger-jsdoc');
+
 const swaggerUi = require('swagger-ui-express');
 const gameRoutes = require('./src/routes/gameRoutes');
 
@@ -19,21 +19,19 @@ app.use(express.json());
 
 app.use('/api/v1', gameRoutes);
 
-const swaggerOptions = {
-  swaggerDefinition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Chess Game API',
-      version: '1.0.0',
-      description: 'API for online chess game',
-    },
-  },
 
-  apis: ['./src/routes/*.js'],
-};
-
-const swaggerDocs = swaggerJsdoc(swaggerOptions);
+const swaggerDocs = require('./src/config/swagger');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+
+const session = require('express-session');
+
+app.use(session({
+  secret: 'twoj_tajny_klucz',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
 
 
 const http = require('http');
