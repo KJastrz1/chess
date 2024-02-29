@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useCreateGame, } from "../lib/queries"
 import { createSocket } from "../lib/socket";
 import Input from "../components/Ui/Input";
-import { Socket } from "socket.io-client";
+import { Socket } from "socket.current.io-client";
+
 
 
 const Home = () => {
@@ -18,19 +19,20 @@ const Home = () => {
         if (!socket.current) {
             socket.current = createSocket();
         }
-        socket.on("receiveMessage", (receivedMessage) => {
+        socket.current.on("receiveMessage", (receivedMessage: string) => {
             setAllMessages(prevMessages => [...prevMessages, receivedMessage]);
         });
         return () => {
-            socket.emit('leaveGame', gameId);
-            socket.disconnect();
+            socket.current.emit('leaveGame', gameId);
+            socket.current.disconnect();
+            
         };
     }, []);
 
 
     useEffect(() => {
         if (!data) return
-        socket.emit('joinGame', data._id, (message: string) => {
+        socket.current.emit('joinGame', data._id, (message: string) => {
             console.log(message);
         });
 
@@ -42,13 +44,13 @@ const Home = () => {
     }
 
     const handleJoin = () => {
-        socket.emit('joinGame', gameId, (message: string) => {
+        socket.current.emit('joinGame', gameId, (message: string) => {
             console.log(message);
         });
     }
 
     const handleSend = () => {
-        socket.emit('sendMessage', { message, gameId });
+        socket.current.emit('sendMessage', { message, gameId });
         setAllMessages([...allMessages, message]);
         setMessage('');
     }

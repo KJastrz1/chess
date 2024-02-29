@@ -26,5 +26,5 @@ module.exports = (io) => {
 
         })
     })
-    instrument(io, { auth: false });
+   
 }
