@@ -34,28 +34,22 @@ app.use(session({
 }));
 
 
-const http = require('http');
+
 const socketIo = require('socket.io');
+const http = require('http');
 
 const server = http.createServer(app);
-const io = socketIo(server);
 
-io.on('connection', (socket) => {
-  socket.on('joinGame', (gameId) => {
-    socket.join(gameId);
-
-    socket.on('move', (move) => {
-      io.to(gameId).emit('move', move);
-    });
-
-    socket.on('leaveGame', () => {
-      socket.leave(gameId);
-    });
-  });
+const io = socketIo(server, {
+  cors: {
+    origin: ["http://localhost:5173", "https://admin.socket.io/"],   
+  }
 });
 
 
+require('./src/socket')(io);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+

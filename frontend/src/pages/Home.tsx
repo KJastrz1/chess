@@ -1,43 +1,76 @@
-import { useEffect } from "react";
-import { useCreateGame, useGetGameById } from "../lib/queries"
-import { io } from "socket.io-client";
+import { useEffect, useState } from "react";
+import { useCreateGame, } from "../lib/queries"
+import { socket } from "../lib/socket";
+import Input from "../components/Ui/Input";
 
-
-const SOCKET_SERVER_URL = "http://localhost:3000";
 
 const Home = () => {
-    const { mutate: createGame, isLoading, error } = useCreateGame();
+    const { mutate: createGame, isLoading: isLoadingCreateGame, data } = useCreateGame();
+    const [gameId, setGameId] = useState('');
+    const [message, setMessage] = useState('');
+    const [allMessages, setAllMessages] = useState([] as string[]);
 
 
     useEffect(() => {
-        // Nawiązywanie połączenia z serwerem Socket.IO
-        const socket = io(SOCKET_SERVER_URL);
-
-        // Dołączanie do gry
-        const gameId = "yourGameId"; // Powinieneś to uzyskać w odpowiedni sposób
-        socket.emit('joinGame', gameId);
-
-        // Nasłuchiwanie na ruchy w grze
-
-
-        // Opuść grę przy odmontowywaniu komponentu
+        socket.on("receiveMessage", (receivedMessage) => {
+            setAllMessages(prevMessages => [...prevMessages, receivedMessage]);
+        });
         return () => {
-            socket.emit('leaveGame');
-            socket.off(); // Usuwa wszystkich nasłuchujących
+            socket.emit('leaveGame', gameId);
+            socket.disconnect();
         };
     }, []);
 
-    const handleClick = () => {
+
+    useEffect(() => {
+        if(!data) return
+        socket.emit('joinGame', data._id, (message: string) => {
+            console.log(message);
+        });
+
+    },[data])    
+
+    const handleCreate = async () => {
         createGame();
+
+    }
+
+    const handleJoin = () => {
+        socket.emit('joinGame', gameId, (message: string) => {
+            console.log(message);
+        });
+    }
+
+    const handleSend = () => {
+        socket.emit('sendMessage', { message, gameId });
+        setAllMessages([...allMessages, message]);
+        setMessage('');
     }
 
     return (
-        <div className="flex justify-center items-center h-screen w-screen">
-            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleClick}>
+        <div className="flex flex-col gap-10 justify-center items-center h-screen w-screen">
+            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCreate}>
                 Create new game
             </button>
-            {isLoading && <p>Loading...</p>}
+            {isLoadingCreateGame && <p>Loading...</p>}
+            {data && <p>Game ID: {data._id}</p>}
 
+
+            <Input type="text" placeholder="Enter game ID" onChange={(e) => { setGameId(e.target.value) }} />
+
+            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={handleJoin}>
+                Join game
+            </button>
+
+            <Input type="text" placeholder="enter message" onChange={(e) => { setMessage(e.target.value) }} />
+
+            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={handleSend}>
+                send
+            </button>
+
+            {allMessages.map((message, index) => (
+                <p key={index}>{message}</p>
+            ))}
         </div>
     )
 }

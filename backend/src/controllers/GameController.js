@@ -2,7 +2,7 @@ const express = require('express');
 const Game = require('../models/Game');
 const { initialBoard } = require('../consts/chessPieces');
 const { v4: uuidv4 } = require('uuid');
-
+const mongoose = require('mongoose');
 
 exports.createGame = async (req, res) => {
     try {
@@ -10,11 +10,11 @@ exports.createGame = async (req, res) => {
 
         const game = new Game({
             player1: player1,
-            board: initialBoard,           
+            board: initialBoard,
         });
         console.log(game);
         await game.save();
-        
+
         res.status(201).json(game);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -32,9 +32,17 @@ exports.getAllGames = async (req, res) => {
 };
 
 exports.getGameById = async (req, res) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid game ID format' });
+    }
+
     try {
-        const game = await Game.findById(req.params.id);
-        if (!game) return res.status(404).json({ message: 'Game not found' });
+        const game = await Game.findById(id);
+        if (!game) {
+            return res.status(404).json({ message: 'Game not found' });
+        }
         res.json(game);
     } catch (err) {
         res.status(500).json({ message: err.message });

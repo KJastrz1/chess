@@ -11,6 +11,7 @@ const gameSchema = new Schema({
         type: [[String]],
         required: true,        
     },
+    whosMove: { type: String, required: true, enum: ['player1', 'player2'], default: 'player1' },
     moves: [{
         from: { row: Number, col: Number },
         to: { row: Number, col: Number },

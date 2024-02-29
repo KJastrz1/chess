@@ -11,3 +11,7 @@ export type SelectedPiece = {
     currentRow: number;
     currentCol: number;
 }
+
+export type IUser = {
+    id: string;
+}

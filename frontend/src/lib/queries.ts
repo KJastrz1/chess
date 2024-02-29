@@ -3,10 +3,10 @@ import { QUERY_KEYS } from "./keyQuery";
 import { createGame, getGameById } from "./api";
 
 export const useCreateGame = () => {
-   return useMutation(createGame, {
-         onSuccess: (data) => {
-              console.log(data);
-         },
+    return useMutation(createGame, {
+        onSuccess: (data) => {
+
+        },
     });
 }
 
