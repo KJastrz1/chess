@@ -1,16 +1,21 @@
 import { io } from "socket.io-client";
 
 const SOCKET_SERVER_URL = "http://localhost:3000";
-export const socket = io(SOCKET_SERVER_URL);
 
-socket.on('connect', () => {
-    console.log('Połączono z serwerem Socket.IO:', socket.id);
-});
+export const createSocket = () => {
+    const socket = io(SOCKET_SERVER_URL);
 
-socket.on('disconnect', (reason) => {
-    console.log('Rozłączono z serwerem Socket.IO:', reason);
-});
+    socket.on('connect', () => {
+        console.log('Connected to Socket.IO server:', socket.id);
+    });
 
-socket.on('connect_error', (error) => {
-    console.error('Błąd połączenia z serwerem Socket.IO:', error);
-});
+    socket.on('disconnect', (reason) => {
+        console.log('Disconnected from Socket.IO server:', reason);
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error('Connection error with Socket.IO server:', error);
+    });
+
+    return socket;
+};

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCreateGame, } from "../lib/queries"
-import { socket } from "../lib/socket";
+import { createSocket } from "../lib/socket";
 import Input from "../components/Ui/Input";
+import { Socket } from "socket.io-client";
 
 
 const Home = () => {
@@ -10,8 +11,13 @@ const Home = () => {
     const [message, setMessage] = useState('');
     const [allMessages, setAllMessages] = useState([] as string[]);
 
+    const socket = useRef<Socket | null>(null);
+
 
     useEffect(() => {
+        if (!socket.current) {
+            socket.current = createSocket();
+        }
         socket.on("receiveMessage", (receivedMessage) => {
             setAllMessages(prevMessages => [...prevMessages, receivedMessage]);
         });
@@ -23,12 +29,12 @@ const Home = () => {
 
 
     useEffect(() => {
-        if(!data) return
+        if (!data) return
         socket.emit('joinGame', data._id, (message: string) => {
             console.log(message);
         });
 
-    },[data])    
+    }, [data])
 
     const handleCreate = async () => {
         createGame();
@@ -56,13 +62,13 @@ const Home = () => {
             {data && <p>Game ID: {data._id}</p>}
 
 
-            <Input type="text" placeholder="Enter game ID" onChange={(e) => { setGameId(e.target.value) }} />
+            <input type="text" placeholder="Enter game ID" onChange={(e) => { setGameId(e.target.value) }} />
 
             <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={handleJoin}>
                 Join game
             </button>
 
-            <Input type="text" placeholder="enter message" onChange={(e) => { setMessage(e.target.value) }} />
+            <input type="text" placeholder="enter message" onChange={(e) => { setMessage(e.target.value) }} />
 
             <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={handleSend}>
                 send

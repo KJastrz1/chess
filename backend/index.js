@@ -42,7 +42,8 @@ const server = http.createServer(app);
 
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://admin.socket.io/"],   
+    origin: ["http://localhost:5173", "https://admin.socket.io/"],
+    methods: ["GET", "POST"],
   }
 });
 
