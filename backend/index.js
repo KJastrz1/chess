@@ -24,31 +24,42 @@ const swaggerDocs = require('./src/config/swagger');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 
-const session = require('express-session');
 
-app.use(session({
-  secret: 'twoj_tajny_klucz',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false }
-}));
-
-
-
-const socketIo = require('socket.io');
 const http = require('http');
-
+const socketIo = require('socket.io');
+// Tworzenie serwera HTTP z aplikacji express
 const server = http.createServer(app);
 
+// Konfiguracja socket.io z dodanymi opcjami CORS
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://admin.socket.io/"],
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: true
   }
 });
 
+// Obsługa zdarzeń socket.io
+io.on('connection', (socket) => {
+  console.log('Nowe połączenie');
 
-require('./src/socket')(io);
+  socket.on('disconnect', () => {
+    console.log('Użytkownik się rozłączył');
+  });
+
+  socket.on('joinGame', (room) => {
+    socket.join(room);
+    console.log(`Użytkownik dołączył do pokoju: ${room}`);
+  });
+
+  socket.on('sendMessage', (message, room) => {
+    console.log('Otrzymano wiadomość:', message);
+    // Emitowanie wiadomości do wszystkich użytkowników w pokoju
+    io.to(room).emit('receiveMessage', message);
+  });
+});
+
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

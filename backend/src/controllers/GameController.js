@@ -12,7 +12,7 @@ exports.createGame = async (req, res) => {
             player1: player1,
             board: initialBoard,
         });
-        console.log(game);
+  
         await game.save();
 
         res.status(201).json(game);

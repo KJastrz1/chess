@@ -1,13 +1,39 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Field from "../components/Field";
 import { ChessSquare } from "../enums/chessPieces";
 import { initialBoard, calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '../logic/chessLogic';
 import { PossibleMove, SelectedPiece } from '../types/types';
+import { useParams } from 'react-router-dom';
+import { io } from 'socket.io-client';
+
+const SOCKET_SERVER_URL = "http://localhost:3000";
+
+export const socket = io(SOCKET_SERVER_URL);
 
 function Board() {
+  const { id: gameId } = useParams();
   const [selectedPiece, setSelectedPiece] = useState<SelectedPiece | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<PossibleMove[]>([]);
   const [gameState, setGameState] = useState<ChessSquare[][]>(initialBoard);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit('joinGame', gameId, (message: string) => {
+      console.log(message);
+    });
+    socket.on("receiveMove", (move) => {
+      console.log("Otrzymano ruch od serwera:", move);
+    });
+    return () => {
+      socket.off("receiveMove");
+    };
+
+  }, []);
+
+  if (!socket) {
+    return <p>Loading...</p>
+  }
 
   const handleClick = (figure: ChessSquare, row: number, col: number) => {
     const isPossibleMove = checkIfPossibleMove(possibleMoves, row, col);
@@ -20,6 +46,8 @@ function Board() {
       setGameState(newGameState);
       setPossibleMoves([]);
       setSelectedPiece(null);
+      socket.emit('sendMove', { from: { row: selectedPiece.currentRow, col: selectedPiece.currentCol }, to: { row, col } }, gameId);
+
     } else if (figure !== "None") {
       setSelectedPiece({ figure, currentRow: row, currentCol: col });
       const moves = calculatePossibleMoves(figure, row, col, gameState);

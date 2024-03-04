@@ -1,17 +1,19 @@
 const Game = require('./models/Game');
-const { instrument } = require('@socket.io/admin-ui');
 
 module.exports = (io) => {
     io.on('connection', (socket) => {
+        console.log('Nowe połączenie:', socket.id);
         socket.on('joinGame', async (gameId, cb) => {
             try {
                 const game = await Game.findOne({ _id: gameId });
+                console.log(game)
                 if (game) {
                     socket.join(gameId);
                     console.log('Gracz dołączył do gry:', gameId);
                     cb(`Joined game ${gameId}`)
 
                 } else {
+                    console.log('Gra nie znaleziona');
                     cb('Game not found');
                 }
             } catch (error) {
@@ -25,6 +27,10 @@ module.exports = (io) => {
             io.to(gameId).emit('receiveMessage', message);
 
         })
+        socket.on('disconnect', (reason) => {
+            console.log(`Klient rozłączony: ${socket.id}, Powód: ${reason}`);
+            
+        });
     })
-   
+
 }
