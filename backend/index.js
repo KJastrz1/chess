@@ -3,7 +3,7 @@ const connectDB = require('./src/config/db');
 
 const swaggerUi = require('swagger-ui-express');
 const gameRoutes = require('./src/routes/gameRoutes');
-
+const userRoutes = require('./src/routes/UserRoutes');
 connectDB();
 
 const app = express();
@@ -17,20 +17,21 @@ app.use(cors({
 
 app.use(express.json());
 
+//ROUTES
 app.use('/api/v1', gameRoutes);
+app.use('/api/v1/users', userRoutes);
 
 
+//SWAGGER
 const swaggerDocs = require('./src/config/swagger');
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 
 
+//SOCKET
 const http = require('http');
 const socketIo = require('socket.io');
-// Tworzenie serwera HTTP z aplikacji express
 const server = http.createServer(app);
-
-// Konfiguracja socket.io z dodanymi opcjami CORS
 const io = socketIo(server, {
   cors: {
     origin: "http://localhost:5173",
@@ -40,25 +41,7 @@ const io = socketIo(server, {
   }
 });
 
-// Obsługa zdarzeń socket.io
-io.on('connection', (socket) => {
-  console.log('Nowe połączenie');
-
-  socket.on('disconnect', () => {
-    console.log('Użytkownik się rozłączył');
-  });
-
-  socket.on('joinGame', (room) => {
-    socket.join(room);
-    console.log(`Użytkownik dołączył do pokoju: ${room}`);
-  });
-
-  socket.on('sendMessage', (message, room) => {
-    console.log('Otrzymano wiadomość:', message);
-    // Emitowanie wiadomości do wszystkich użytkowników w pokoju
-    io.to(room).emit('receiveMessage', message);
-  });
-});
+require('./src/socket')(io);
 
 
 server.listen(PORT, () => {

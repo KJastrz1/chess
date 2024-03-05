@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const gameController = require('../controllers/GameController');
+const { protect } = require('../middleware/authMiddleware');
 
+router.post('/games', protect, gameController.createGame);
 
-router.post('/games', gameController.createGame);
+router.get('/games', protect, gameController.getAllGames);
 
-router.get('/games', gameController.getAllGames);
+router.get('/games/:id', protect, gameController.getGameById);
 
-router.get('/games/:id', gameController.getGameById);
+router.put('/games/:id', protect, gameController.updateGame);
 
-router.put('/games/:id', gameController.updateGame);
-
-router.delete('/games/:id', gameController.deleteGame);
+router.delete('/games/:id', protect, gameController.deleteGame);
 
 module.exports = router;
 

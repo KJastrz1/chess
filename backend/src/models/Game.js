@@ -5,13 +5,14 @@ const model = mongoose.model;
 
 
 const gameSchema = new Schema({
-    player1: { type: String, required: true },
+    player1: { type: String },
     player2: { type: String },
     board: {
         type: [[String]],
-        required: true,        
+        required: true,
     },
-    whosMove: { type: String, required: true, enum: ['player1', 'player2'], default: 'player1' },
+    whitePlayer: { type: String },
+    whosMove: { type: String },
     moves: [{
         from: { row: Number, col: Number },
         to: { row: Number, col: Number },

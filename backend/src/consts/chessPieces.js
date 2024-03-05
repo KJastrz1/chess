@@ -1,20 +1,20 @@
 const White = {
-    Pawn: "White_Pawn",
-    Knight: "White_Knight",
-    Bishop: "White_Bishop",
-    Rook: "White_Rook",
-    Queen: "White_Queen",
-    King: "White_King",
-  };
-  
-  const Black = {
-    Pawn: "Black_Pawn",
-    Knight: "Black_Knight",
-    Bishop: "Black_Bishop",
-    Rook: "Black_Rook",
-    Queen: "Black_Queen",
-    King: "Black_King",
-  };
+  Pawn: "wp",
+  Knight: "wn",
+  Bishop: "wb",
+  Rook: "wr",
+  Queen: "wq",
+  King: "wk",
+};
+
+const Black = {
+  Pawn: "bp",
+  Knight: "bn",
+  Bishop: "bb",
+  Rook: "br",
+  Queen: "bq",
+  King: "bk",
+};
   
   const None = "None";
   

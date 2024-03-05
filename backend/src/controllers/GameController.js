@@ -5,14 +5,11 @@ const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 
 exports.createGame = async (req, res) => {
-    try {
-        const player1 = uuidv4();
+    try {     
 
-        const game = new Game({
-            player1: player1,
-            board: initialBoard,
+        const game = new Game({          
+            board: initialBoard,           
         });
-  
         await game.save();
 
         res.status(201).json(game);

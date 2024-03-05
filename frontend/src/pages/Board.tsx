@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Field from "../components/Field";
+import Field from "../shared/Field";
 import { ChessSquare } from "../enums/chessPieces";
 import { initialBoard, calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '../logic/chessLogic';
 import { PossibleMove, SelectedPiece } from '../types/types';
@@ -46,7 +46,12 @@ function Board() {
       setGameState(newGameState);
       setPossibleMoves([]);
       setSelectedPiece(null);
-      socket.emit('sendMove', { from: { row: selectedPiece.currentRow, col: selectedPiece.currentCol }, to: { row, col } }, gameId);
+      socket.emit('sendMove', {
+        srcRow: selectedPiece.currentRow,
+        srcCol: selectedPiece.currentCol,
+        destRow: row,
+        destCol: col
+      }, gameId);
 
     } else if (figure !== "None") {
       setSelectedPiece({ figure, currentRow: row, currentCol: col });

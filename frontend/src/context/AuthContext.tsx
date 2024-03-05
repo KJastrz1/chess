@@ -1,10 +1,12 @@
-import React, { createContext,  useState, useEffect } from 'react';
+import React, { createContext,  useState, useEffect, useContext } from 'react';
 import Cookies from 'js-cookie';
 import { IUser } from '../types/types';
 import { useNavigate } from 'react-router-dom';
 
 export const initialUser = {
-    id: ''
+    id: '',
+    username: '',
+    email: ''    
 };
 
 const INITIAL_STATE = {
@@ -19,7 +21,7 @@ type IContextType = {
     logout: () => void;
 };
 
-export const AuthContext = createContext<IContextType>(INITIAL_STATE);
+const AuthContext = createContext<IContextType>(INITIAL_STATE);
 
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -41,8 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
 
-    const logout = () => {
-        setUser({ id: '' });
+    const logout = () => {        
         Cookies.remove('user');
         navigate('/');
     };
@@ -61,3 +62,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 }
 
+export const useUserContext = () => {
+    return useContext(AuthContext);
+}
