@@ -34,10 +34,10 @@ const Home = () => {
 
     }
 
- 
+
 
     return (
-        <div className="flex flex-col items-center w-full p-10">
+        <div className="flex flex-col items-center w-full p-6">
             <div className="flex flex-col md:flex-row gap-3 justify-center items-center">
 
                 <Input type="text" className="h-3/5" placeholder="Search username" onChange={(e) => { setSearchValue(e.target.value) }} />
@@ -59,23 +59,23 @@ const Home = () => {
                         </div>
                     ) : "Join game"}
                 </Button>
-
             </div>
+            {isLoadingGames &&
+                <div className="flex items-center">
+                    <Loader />
+                </div>
+            }
+            {!isLoadingGames && games &&
+                <div className="flex flex-col items-center w-full p-10">
+                    {games.map((game) => {
+                        return (
+                            <div key={game._id}>
+                                <p>{game._id}</p>
+                            </div>
+                        )
+                    })}
 
-            <div className="flex items-center h-full">
-                {isLoadingGames && <Loader />}
-            </div>
-
-            <div className="flex flex-col items-center w-full p-10">
-                {!isLoadingGames && games && games.map((game) => {
-                    return (
-                        <div key={game._id}>
-                            <p>{game._id}</p>
-                        </div>
-                    )
-                })
-                }
-            </div>
+                </div>}
         </div >
     )
 }

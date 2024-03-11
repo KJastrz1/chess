@@ -21,9 +21,9 @@ const RootLayout = () => {
     return (
         <div className="w-full">
             <TopBar />
-            <section className="flex flex-1 h-full">
-                <Outlet />
-            </section>
+
+            <Outlet />
+
         </div>
     );
 };
