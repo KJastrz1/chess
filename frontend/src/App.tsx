@@ -8,7 +8,7 @@ import RootLayout from "./pages/_root/RootLayout"
 
 const App = () => {
   return (
-    <main className="flex h-screen w-screen bg-white dark:bg-gray-800">
+    <main className="flex h-screen w-screen bg-white dark:bg-gray-800 text-red">
       <Routes>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
