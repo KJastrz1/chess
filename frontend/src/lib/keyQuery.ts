@@ -8,6 +8,8 @@ export enum QUERY_KEYS {
     GET_MOVES = "getMoves",
     GET_GAME_HISTORY = "getGameHistory",
     GET_GAME_STATUS = "getGameStatus",
+    SEARCH_GAMES = "searchGames",
+    GET_CURRENT_USER = "getCurrentUser",
     
 
 

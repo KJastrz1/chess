@@ -24,4 +24,12 @@ export type INewUser = {
     username: string;
     password: string;
   };
+
+  export type IGame = {
+    id:string;
+    player1: string;
+    player1Name: string;
+    player2: string;
+    player2Name: string;
+  };
   

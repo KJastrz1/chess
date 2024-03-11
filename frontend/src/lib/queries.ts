@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "react-query";
 import { QUERY_KEYS } from "./keyQuery";
-import { createGame, createUserAccount, getGameById, signInAccount } from "./api";
+import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, searchGames, signInAccount } from "./api";
 import { INewUser } from "../types/types";
 
 // ============================================================
@@ -19,6 +19,13 @@ export const useSignInAccount = () => {
     });
 };
 
+export const useGetCurrentUser = () => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+        queryFn: () => getCurrentUser(),
+    });
+}
+
 
 // ============================================================
 // GAMES QUERIES
@@ -30,6 +37,22 @@ export const useCreateGame = () => {
         },
     });
 }
+
+export const useSearchGames = (searchTerm: string) => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.SEARCH_GAMES, searchTerm],
+        queryFn: () => searchGames(searchTerm),
+
+    });
+}
+
+export const useGetGames = () => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_GAMES],
+        queryFn: () => getGames(),
+    });
+}
+
 
 export const useGetGameById = (gameId: string) => {
     return useQuery({

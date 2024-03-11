@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChessSquare } from '../enums/chessPieces';
 
-interface FieldProps {
+interface SquareProps {
     isWhite?: boolean;
     figure: ChessSquare;
     onClick?: (figure: ChessSquare, row: number, col: number) => void;
@@ -11,7 +11,7 @@ interface FieldProps {
     capture?: boolean;
 }
 
-const Field = ({ onClick, isWhite = false, figure, highlight, row, col, capture }: FieldProps) => {
+const Square = ({ onClick, isWhite = false, figure, highlight, row, col, capture }: SquareProps) => {
     const imagePath = figure !== "None" ? `/assets/figures/${figure}.svg` : '';
 
     const handleClick = () => onClick?.(figure, row, col);
@@ -38,4 +38,4 @@ const Field = ({ onClick, isWhite = false, figure, highlight, row, col, capture 
 };
 
 
-export default Field;
+export default Square;

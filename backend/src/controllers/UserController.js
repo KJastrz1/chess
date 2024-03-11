@@ -12,7 +12,11 @@ exports.register = async (req, res) => {
 
         let user = await User.findOne({ email });
         if (user) {
-            return res.status(400).json({ message: 'User already exists' });
+            return res.status(400).json({ message: 'Email already in use' });
+        }
+        user = await User.findOne({ username });
+        if (user) {
+            return res.status(400).json({ message: 'Username already in use' });
         }
         user = new User({
             username,
@@ -20,18 +24,18 @@ exports.register = async (req, res) => {
             password
         });
         await user.save();
-        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7d' });
-        res.cookie('token', token, {
+        const token = jwt.sign({ _id: user._id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+        res.cookie('jwtToken', token, {
             httpOnly: true,
             secure: false,
-            sameSite: 'strict',
+            sameSite: 'Lax',
             maxAge: 604800000
         });
 
         const userResponse = {
             _id: user._id,
             username: user.username,
-            email: user.email,            
+            email: user.email,
         };
         res.status(201).json({ userResponse });
     } catch (error) {
@@ -55,17 +59,17 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7d' });
-        res.cookie('token', token, {
+        const token = jwt.sign({ _id: user._id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+        res.cookie('jwtToken', token, {
             httpOnly: true,
             secure: false,
-            sameSite: 'strict',
+            sameSite: 'Lax',
             maxAge: 604800000
         });
         const userResponse = {
             _id: user._id,
             username: user.username,
-            email: user.email,            
+            email: user.email,
         };
         res.status(201).json({ userResponse });
     } catch (error) {
@@ -74,6 +78,23 @@ exports.login = async (req, res) => {
     }
 };
 
+
+exports.getCurrentUser = async (req, res) => {
+    const user = req.user;
+
+    return res.status(200).json(user);
+};
+
+exports.logout = async (req, res) => {
+    console.log('logout');
+    res.cookie('jwtToken', '', {
+        httpOnly: true,
+        expires: new Date(0),
+        secure: false,
+        sameSite: 'Lax'
+    })
+    res.status(200).send('Logged out');
+};
 
 exports.getProfile = async (req, res) => {
     console.log('getProfile');

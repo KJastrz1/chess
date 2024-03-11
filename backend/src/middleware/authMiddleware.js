@@ -4,23 +4,23 @@ const User = require('../models/User');
 exports.protect = async (req, res, next) => {
     let token;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    if (req.cookies && req.cookies['jwtToken']) {
         try {
-
-            token = req.headers.authorization.split(' ')[1];
+            token = req.cookies['jwtToken'];
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-            req.user = await User.findById(decoded.userId).select('-password');
-
+            
+            req.user= await User.findById(decoded._id).select('-password');
+           
+            if (!req.user) {              
+                return res.status(404).json({ message: 'User not found' });
+            }
             next();
         } catch (error) {
             console.error(error);
-            res.status(401).json({ message: 'Nieautoryzowany dostęp' });
+            return res.status(401).json({ message: 'Unauthorized access, invalid token' });
         }
-    }
-
-    if (!token) {
-        res.status(401).json({ message: 'Nieautoryzowany dostęp, brak tokenu' });
+    } else {
+        return res.status(401).json({ message: 'No token provided' });
     }
 };

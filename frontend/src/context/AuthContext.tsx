@@ -1,12 +1,13 @@
-import React, { createContext,  useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import Cookies from 'js-cookie';
 import { IUser } from '../types/types';
 import { useNavigate } from 'react-router-dom';
+import { getCurrentUser, logoutUser } from '@/lib/api';
 
 export const initialUser = {
-    id: '',
+    _id: '',
     username: '',
-    email: ''    
+    email: ''
 };
 
 const INITIAL_STATE = {
@@ -19,6 +20,8 @@ type IContextType = {
     user: IUser;
     login: (userData: IUser) => void;
     logout: () => void;
+    isAuthenticated: boolean;
+    isLoading: boolean;
 };
 
 const AuthContext = createContext<IContextType>(INITIAL_STATE);
@@ -27,32 +30,57 @@ const AuthContext = createContext<IContextType>(INITIAL_STATE);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const navigate = useNavigate();
     const [user, setUser] = useState<IUser>(initialUser);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const checkAuthUser = async () => {
+        setIsLoading(true);
+        console.log('checking user');
+        try {          
+            const data = await getCurrentUser();
+            console.log('data:', data);
+            if (data) {
+                setUser(data);
+                setIsAuthenticated(true);
+                navigate('/');
+                return true;
+            }
+            navigate("/login");
+            return false;
+        } catch (error) {
+            console.error(error);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const user = Cookies.get('user');
-        if (user) {
-            setUser(JSON.parse(user));
-        } else {
-            navigate('/');
-        }
+        checkAuthUser();
     }, []);
+
 
     const login = (userData: IUser) => {
         setUser(userData);
-        Cookies.set('user', JSON.stringify(userData), { expires: 7 });
+        setIsAuthenticated(true);
+        navigate('/');
     };
 
 
-    const logout = () => {        
-        Cookies.remove('user');
-        navigate('/');
+    const logout = async () => {
+        await logoutUser();
+        setUser(initialUser);
+        setIsAuthenticated(false);
+        navigate('/login');
     };
 
 
     const value = {
         user,
         login,
-        logout
+        logout,
+        isAuthenticated,
+        isLoading
     };
     return (
         <AuthContext.Provider value={value} >

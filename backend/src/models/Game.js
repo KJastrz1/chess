@@ -5,8 +5,8 @@ const model = mongoose.model;
 
 
 const gameSchema = new Schema({
-    player1: { type: String },
-    player2: { type: String },
+    player1: { type: Schema.Types.ObjectId, ref: 'User' }, 
+    player2: { type: Schema.Types.ObjectId, ref: 'User' },
     board: {
         type: [[String]],
         required: true,

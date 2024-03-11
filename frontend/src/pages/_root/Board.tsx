@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import Field from "../shared/Field";
-import { ChessSquare } from "../enums/chessPieces";
-import { initialBoard, calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '../logic/chessLogic';
-import { PossibleMove, SelectedPiece } from '../types/types';
+import Square from "../../shared/Square";
+import { ChessSquare } from "../../enums/chessPieces";
+import { initialBoard, calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '../../logic/chessLogic';
+import { PossibleMove, SelectedPiece } from '../../types/types';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
@@ -73,7 +73,7 @@ function Board() {
         const capture = highlight && checkCapture(selectedPiece, rowIndex, colIndex, gameState);
 
         return (
-          <Field
+          <Square
             key={`${rowIndex}-${colIndex}`}
             onClick={handleClick}
             isWhite={isWhite}
