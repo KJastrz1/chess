@@ -1,23 +1,32 @@
 import { useEffect, useState } from 'react';
-import Square from "../../shared/Square";
-import { ChessSquare } from "../../enums/chessPieces";
-import { initialBoard, calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '../../logic/chessLogic';
-import { PossibleMove, SelectedPiece } from '../../types/types';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
+
+import Square from "../../shared/Square";
+import { initialBoard, calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '@/logic/chessLogic';
+import { PossibleMove, SelectedPiece } from '@/types/types';
+import { useGetGameById } from '@/lib/queries';
+import Loader from '@/components/Ui/Loader';
+import { useUserContext } from '@/context/AuthContext';
+import { ChessSquare, White } from '@/enums/chessPieces';
 
 const SOCKET_SERVER_URL = "http://localhost:3000";
 
 export const socket = io(SOCKET_SERVER_URL);
 
 function Board() {
-  const { id: gameId } = useParams();
+  const { id: gameId } = useParams<{ id?: string }>();
+
+  const { data: game, isLoading: isLoadingGame, error, refetch } = useGetGameById(gameId);
   const [selectedPiece, setSelectedPiece] = useState<SelectedPiece | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<PossibleMove[]>([]);
   const [gameState, setGameState] = useState<ChessSquare[][]>(initialBoard);
+  const { user } = useUserContext();
+  const isWhitePlayer = true;
 
   useEffect(() => {
     if (!socket) return;
+    refetch();
 
     socket.emit('joinGame', gameId, (message: string) => {
       console.log(message);
@@ -31,11 +40,22 @@ function Board() {
 
   }, []);
 
-  if (!socket) {
-    return <p>Loading...</p>
+  useEffect(() => {
+    if (game && game.board) {
+      setGameState(game.board);
+    }
+  }, [game]);
+
+  if (error) return <div>Error loading the game.</div>;
+  if (!socket || isLoadingGame) {
+    return <Loader />
   }
 
   const handleClick = (figure: ChessSquare, row: number, col: number) => {
+    const isFigureWhite = Object.values(White).includes(figure);
+    if ((isWhitePlayer && !isFigureWhite) || (!isWhitePlayer && isFigureWhite)) {
+      return;
+    }
     const isPossibleMove = checkIfPossibleMove(possibleMoves, row, col);
 
     if (isPossibleMove && selectedPiece) {
@@ -53,7 +73,7 @@ function Board() {
         destCol: col
       }, gameId);
 
-    } else if (figure !== "None") {
+    } else if (figure !== "None" && isWhitePlayer && Object.values(ChessSquare).includes(figure)) {
       setSelectedPiece({ figure, currentRow: row, currentCol: col });
       const moves = calculatePossibleMoves(figure, row, col, gameState);
       setPossibleMoves(moves);
@@ -90,7 +110,7 @@ function Board() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen w-screen">
+    <div className="flex justify-center items-center h-full w-full py-2 md:px-4">
       <div className="grid grid-cols-8 gap-0 ">
         {renderBoard()}
       </div>

@@ -12,7 +12,7 @@ router.get('/profile', protect, getProfile);
 
 router.get('/get-current-user', protect, getCurrentUser);
 
-router.get('/logout', logout);
+router.get('/logout',  logout);
 
 module.exports = router;
 

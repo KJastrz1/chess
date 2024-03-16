@@ -1,8 +1,6 @@
-import React from 'react';
 import { useUserContext } from "@/context/AuthContext";
 import { Outlet, Navigate } from "react-router-dom";
 import Loader from '@/components/Ui/Loader';
-import TopBar from '@/shared/TopBar';
 import Navbar from '@/shared/NavBar';
 
 const RootLayout = () => {
@@ -20,7 +18,7 @@ const RootLayout = () => {
 
 
     return (
-        <div className="w-full">
+        <div className="w-full h-full">
             <Navbar />
 
             <Outlet />

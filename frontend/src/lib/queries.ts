@@ -58,7 +58,7 @@ export const useGetGameById = (gameId: string) => {
     return useQuery({
         queryKey: [QUERY_KEYS.GET_GAME_BY_ID, gameId],
         queryFn: () => getGameById(gameId),
-        enabled: !!gameId,
+        enabled: false,
     });
 }
 

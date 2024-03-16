@@ -32,7 +32,7 @@ export const calculatePossibleMoves = (figure: White | Black, row: number, col: 
     { dRow: 1, dCol: -1 }, { dRow: 1, dCol: 1 },
   ];
 
-  let moves = [];
+  const moves = [];
 
   const isWhite = Object.values(White).includes(figure);
 

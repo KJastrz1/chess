@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import Cookies from 'js-cookie';
 import { IUser } from '../types/types';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logoutUser } from '@/lib/api';
@@ -13,7 +12,9 @@ export const initialUser = {
 const INITIAL_STATE = {
     user: initialUser,
     login: () => { },
-    logout: () => { }
+    logout: () => { },
+    isAuthenticated: false,
+    isLoading: false
 };
 
 type IContextType = {
@@ -36,9 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkAuthUser = async () => {
         setIsLoading(true);
         console.log('checking user');
-        try {          
-            const data = await getCurrentUser();
-            console.log('data:', data);
+        try {
+            const data = await getCurrentUser();        
             if (data) {
                 setUser(data);
                 setIsAuthenticated(true);
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
     const logout = async () => {
-        await logoutUser();
+        const data=await logoutUser();       
         setUser(initialUser);
         setIsAuthenticated(false);
         navigate('/login');

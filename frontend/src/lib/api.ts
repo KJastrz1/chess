@@ -1,5 +1,5 @@
 import axios from "axios";
-import { INewUser } from "../types/types";
+import { IGame, INewUser } from "../types/types";
 
 const API_URL = "http://localhost:3000/api/v1";
 axios.defaults.withCredentials = true;
@@ -29,8 +29,7 @@ export async function signInAccount(user: { email: string; password: string }) {
 export async function getCurrentUser() {
 
     try {
-        const response = await axios.get(`${API_URL}/users/get-current-user`);
-        console.log('response:', response);
+        const response = await axios.get(`${API_URL}/users/get-current-user`);       
         return response.data;
     } catch (error) {       
         throw new Error('Failed to fetch user data');
@@ -39,7 +38,7 @@ export async function getCurrentUser() {
 
 export async function logoutUser() {
     try {
-        const response = await axios.post(`${API_URL}/users/logout`);
+        const response = await axios.get(`${API_URL}/users/logout`);
         return response.data;
     } catch (error) {
         throw new Error('Failed to log out');
@@ -55,7 +54,7 @@ export async function logoutUser() {
 // ============================================================
 export async function getGameById(gameId: string) {
     try {
-        const response = await axios.get(`${API_URL}/games/${gameId}`);
+        const response = await axios.get<IGame>(`${API_URL}/games/${gameId}`);
         return response.data;
     } catch (error) {
         throw new Error('Failed to fetch game data');

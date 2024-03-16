@@ -1,18 +1,17 @@
 const express = require('express');
 const Game = require('../models/Game');
 const { initialBoard } = require('../consts/chessPieces');
-const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 
 exports.createGame = async (req, res) => {
     try {
-
+        console.log('createGame', req.user);
         const game = new Game({
-            board: initialBoard,
+            player1: req.user._id,            
         });
+        console.log('createGame', game);
         await game.save();
-
         res.status(201).json(game);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -25,22 +24,23 @@ exports.getAllGames = async (req, res) => {
         let games;
 
         if (req.query.searchTerm) {
-            
+
             const users = await User.find({
                 username: { $regex: req.query.searchTerm, $options: "i" }
-            }).select('_id'); 
+            }).select('_id');
 
-            const userIds = users.map(user => user._id); 
-        
+            const userIds = users.map(user => user._id);
+
             games = await Game.find({
                 player1: { $in: userIds }
-            }).populate('player1', 'username')
-                .populate('player2', 'username');
+            }).select('player1 moveTime')
+                .populate('player1', 'username');
         } else {
             games = await Game.find()
-                .populate('player1', 'username')
-                .populate('player2', 'username');
+                .select('player1 moveTime')
+                .populate('player1', 'username');
         }
+        console.log('getGames', games);
         res.json(games);
     } catch (error) {
         console.error(error);
