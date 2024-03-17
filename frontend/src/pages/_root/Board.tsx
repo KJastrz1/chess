@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
+import {  White } from "../../enums/index.ts";
 import Square from "../../shared/Square";
 import { initialBoard, calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '@/logic/chessLogic';
-import { PossibleMove, SelectedPiece } from '@/types/types';
+import {  ChessSquare, PossibleMove, SelectedPiece } from '@/types/index.ts';
 import { useGetGameById } from '@/lib/queries';
 import Loader from '@/components/Ui/Loader';
 import { useUserContext } from '@/context/AuthContext';
-import { ChessSquare, White } from '@/enums/chessPieces';
+
 
 const SOCKET_SERVER_URL = "http://localhost:3000";
 

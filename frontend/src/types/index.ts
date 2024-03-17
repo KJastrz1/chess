@@ -1,4 +1,7 @@
-import { ChessSquare } from "../enums/chessPieces";
+import { Black, White } from "../enums/index.ts";
+
+
+export type ChessSquare = Black | White | "None";
 
 export type INavLink = {
     route: string;
@@ -44,7 +47,7 @@ export type IGame = {
     moves: IMove[];
 };
 
-export type IMove={
+export type IMove = {
     srcRow: number;
     srcCol: number;
     destRow: number;
@@ -60,3 +63,4 @@ export type IGameListItem = {
     };
     moveTime?: number;
 };
+

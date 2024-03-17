@@ -1,6 +1,6 @@
 import { navBarLinks } from "@/constants/NavBarLinks"
 import ThemeSwitch from "./ThemeSwitch"
-import { INavLink } from "@/types/types"
+import { INavLink } from "@/types"
 import { useLocation } from "react-router-dom"
 import { useState } from "react"
 import { useUserContext } from "@/context/AuthContext"

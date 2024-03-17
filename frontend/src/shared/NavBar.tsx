@@ -1,11 +1,11 @@
 import { navBarLinks } from '@/constants/NavBarLinks';
 import { useUserContext } from '@/context/AuthContext';
-import { INavLink } from '@/types/types';
+import { INavLink } from '@/types';
 import { useState } from 'react';
 import { AiOutlineClose, AiOutlineMenu } from 'react-icons/ai';
 import { NavLink, useLocation } from 'react-router-dom';
 import ThemeSwitch from './ThemeSwitch';
-import { Black, White } from '@/enums/chessPieces';
+import { Black, White } from '@/enums';
 
 const Navbar = () => {
     const { pathname } = useLocation()

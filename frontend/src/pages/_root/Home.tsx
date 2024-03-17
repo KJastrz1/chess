@@ -7,7 +7,7 @@ import useDebounce from "@/hooks/useDebounce";
 import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
-import { IGameListItem } from "@/types/types";
+import { IGameListItem } from "@/types";
 import LoadingButton from "@/components/Ui/LoadingButton";
 import { ref } from "yup";
 

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { IGame, INewUser } from "../types/types";
+import { IGame, INewUser } from "../types";
 
 const API_URL = "http://localhost:3000/api/v1";
 axios.defaults.withCredentials = true;

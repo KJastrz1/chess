@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChessSquare } from '../enums/chessPieces';
+import { ChessSquare } from '../enums/index.ts';
 
 interface SquareProps {
     isWhite?: boolean;

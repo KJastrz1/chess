@@ -1,5 +1,5 @@
-import { White, Black, ChessSquare } from "../enums/chessPieces";
-import { SelectedPiece } from "../types/types";
+import { White, Black, ChessSquare } from "../enums/index.ts";
+import { SelectedPiece } from "../types/index.ts";
 
 
 export const initialBoard: ChessSquare[][] = [

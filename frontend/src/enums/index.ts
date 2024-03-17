@@ -18,4 +18,3 @@ export enum Black {
 
 export const None = "None";
 
-export type ChessSquare = Black | White | "None";
