@@ -1,9 +1,5 @@
 import { Black, ChessSquare, SelectedPiece, White } from "@chess/types";
 
-
-
-
-
 export const calculatePossibleMoves = (figure: White | Black, row: number, col: number, gameState: (ChessSquare)[][]) => {
 
   const knightMoves = [

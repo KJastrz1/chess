@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist",
+        "declaration": true,
+        "strict": true,
+        "esModuleInterop": true,
+        "module": "CommonJS",
+        "target": "ES5"
+    },
+    "include": [
+        "index.ts"
+    ]
+}

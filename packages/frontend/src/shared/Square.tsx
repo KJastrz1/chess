@@ -1,4 +1,5 @@
-import { ChessSquare } from '../../../shared/enums/index.ts';
+import { ChessSquare } from "@chess/types";
+
 
 interface SquareProps {
     isWhite?: boolean;

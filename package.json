@@ -1,8 +1,7 @@
 {
-    "name": "chess",
-    "private": true,
-    "workspaces": [
-      "./*"
-    ]
-  }
-  
+  "name": "chess",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
+}
