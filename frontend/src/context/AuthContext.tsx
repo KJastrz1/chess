@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { IUser } from '../types';
+import { IUser } from '../../../shared/types';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logoutUser } from '@/lib/api';
 

@@ -1,9 +1,8 @@
+import { IGame, INewUser } from "@chess/types";
 import axios from "axios";
-import { IGame, INewUser } from "../types";
 
 const API_URL = "http://localhost:3000/api/v1";
 axios.defaults.withCredentials = true;
-
 
 // ============================================================
 // AUTH API
@@ -44,10 +43,6 @@ export async function logoutUser() {
         throw new Error('Failed to log out');
     }
 }
-
-
-
-
 
 // ============================================================
 // GAMES API

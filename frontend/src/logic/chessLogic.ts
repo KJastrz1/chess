@@ -1,17 +1,8 @@
-import { White, Black, ChessSquare } from "../enums/index.ts";
-import { SelectedPiece } from "../types/index.ts";
+import { Black, ChessSquare, SelectedPiece, White } from "@chess/types";
 
 
-export const initialBoard: ChessSquare[][] = [
-  [Black.Rook, Black.Knight, Black.Bishop, Black.Queen, Black.King, Black.Bishop, Black.Knight, Black.Rook],
-  [Black.Pawn, Black.Pawn, Black.Pawn, Black.Pawn, Black.Pawn, Black.Pawn, Black.Pawn, Black.Pawn],
-  ["None", "None", "None", "None", "None", "None", "None", "None"],
-  ["None", "None", "None", "None", "None", "None", "None", "None"],
-  ["None", "None", "None", "None", "None", "None", "None", "None"],
-  ["None", "None", "None", "None", "None", "None", "None", "None"],
-  [White.Pawn, White.Pawn, White.Pawn, White.Pawn, White.Pawn, White.Pawn, White.Pawn, White.Pawn],
-  [White.Rook, White.Knight, White.Bishop, White.Queen, White.King, White.Bishop, White.Knight, White.Rook]
-];
+
+
 
 export const calculatePossibleMoves = (figure: White | Black, row: number, col: number, gameState: (ChessSquare)[][]) => {
 

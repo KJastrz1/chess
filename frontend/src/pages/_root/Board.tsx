@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-import {  White } from "../../enums/index.ts";
+import {  White } from "../../../../shared/enums/index.ts";
 import Square from "../../shared/Square";
 import { initialBoard, calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '@/logic/chessLogic';
 import {  ChessSquare, PossibleMove, SelectedPiece } from '@/types/index.ts';

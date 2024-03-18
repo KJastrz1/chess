@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "react-query";
 import { QUERY_KEYS } from "./keyQuery";
 import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, searchGames, signInAccount } from "./api";
-import { INewUser } from "../types";
+import { INewUser } from "@chess/types";
 
 // ============================================================
 // AUTH QUERIES
