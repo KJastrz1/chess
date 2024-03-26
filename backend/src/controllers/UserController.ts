@@ -116,12 +116,12 @@ export interface GetProfileRequest extends AuthenticatedRequest {
 export const getProfile = async (req: GetProfileRequest, res: Response): Promise<void> => {
     console.log('getProfile');
     try {
-
-        const user = await User.findById(req.params.id).select('-password');
+        const user = await User.findById(req.params.id);
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ message: 'User not found' });
+            return;
         }
-        res.json(user);
+        res.status(200).json(user);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });

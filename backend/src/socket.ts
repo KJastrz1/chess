@@ -21,8 +21,8 @@ export default (io: SocketIOServer) => {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as jwt.JwtPayload;
 
-                socket.data.user = await User.findById(decoded._id).select('-password');
-                
+                socket.data.user = await User.findById(decoded._id);
+
                 if (!socket.data.user) {
                     next(new Error('User not found'));
                 }
@@ -38,12 +38,12 @@ export default (io: SocketIOServer) => {
     });
 
     io.on('connection', (socket: Socket) => {
-     
-        console.log('Użytkownik:', socket.data.user._id);
+
 
         socket.on('joinGame', async (gameId: string, cb: (message: string) => void) => {
-            console.log('odebrano dolacz do gry:', gameId)
+
             try {
+                console.log('user o id:', socket.data.user._id, " dolaczyl do gry");
                 const game: IGameModel | null = await Game.findOne({ _id: gameId });
                 // console.log('game:player2', game?.player2);                
                 if (!game) {
@@ -61,7 +61,7 @@ export default (io: SocketIOServer) => {
                     game.whitePlayer = players[whitePlayerIndex];
                     game.whosMove = game.whitePlayer;
                 }
-                console.log('player1:', game.player1);
+
                 if (game.player1.toString() !== socket.data.user._id.toString()
                     && game.player2.toString() !== socket.data.user._id.toString()) {
                     console.log('Gracz nie należy do gry');

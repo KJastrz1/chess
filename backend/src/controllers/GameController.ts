@@ -1,14 +1,12 @@
 import {  Response } from 'express';
 import mongoose from 'mongoose';
 import { User } from '../models/User';
-
 import { Game } from '../models/Game';
 import { IGame } from '../types/index';
 import { AuthenticatedRequest } from '@src/types/express';
 
 export const createGame = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    try {
-        console.log('createGame', req.user);
+    try {       
         const game = new Game({
             player1: req.user._id,
         });

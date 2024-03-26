@@ -1,20 +1,19 @@
 import { AuthenticatedRequest } from '@src/types/express';
-import { IUserModel, User } from '../models/User';
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import {  User } from '../models/User';
+import { Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 
 
 
-export const protect = async (req: Request, res: Response, next: NextFunction) => {
+export const protect = async (req: any, res: Response, next: NextFunction) => {
   let token;
-
   if (req.cookies && req.cookies['jwtToken']) {
     try {
       token = req.cookies['jwtToken'];
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as jwt.JwtPayload;
 
-      req.user = await User.findById(decoded._id).select('-password');
+      req.user = await User.findById(decoded._id);
       if (!req.user) {
         return res.status(404).json({ message: 'User not found' });
       }

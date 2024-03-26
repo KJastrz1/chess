@@ -28,7 +28,7 @@ app.use(cookieParser());
 
 //ROUTES
 app.use('/api/v1', gameRoutes);
-app.use('/api/v1/users', userRoutes);
+app.use('/api/v1', userRoutes);
 
 
 //SWAGGER

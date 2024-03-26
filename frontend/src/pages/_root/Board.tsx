@@ -43,12 +43,12 @@ function Board() {
         console.log("Otrzymano ruch od serwera:", move);
       });
     }
-    // return () => {
-    //   if (socket) {
-    //     console.log('disconnecting socket.io');
-    //     socket.disconnect();
-    //   }
-    // };
+    return () => {
+      if (socket) {
+        console.log('disconnecting socket.io');
+        socket.disconnect();
+      }
+    };
   }, [token, gameId]);
 
   useEffect(() => {

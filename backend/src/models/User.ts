@@ -5,7 +5,6 @@ export interface IUserModel extends Document {
   _id: Types.ObjectId;
   username: string;
   email: string;
-  password: string;
   createdAt?: Date;
   updatedAt?: Date;
   matchPassword: (enteredPassword: string) => Promise<boolean>;
@@ -36,7 +35,8 @@ const userSchema: Schema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters']
+    minlength: [6, 'Password must be at least 6 characters'],
+    select: false
   },
   createdAt: {
     type: Date,

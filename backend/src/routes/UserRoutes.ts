@@ -4,17 +4,17 @@ import { handleAuthenticatedRequest, protect } from '../middleware/authMiddlewar
 
 const router = express.Router();
 
-router.post('/register', register);
+router.post('/users/register', register);
 
-router.post('/login', login);
+router.post('/users/login', login);
 
-router.get('/profile', protect, handleAuthenticatedRequest<GetProfileRequest>(getProfile));
+router.get('/users/profile/:id', protect, handleAuthenticatedRequest<GetProfileRequest>(getProfile));
 
-router.get('/get-current-user', protect, handleAuthenticatedRequest(getCurrentUser));
+router.get('/users/get-current-user', protect, handleAuthenticatedRequest(getCurrentUser));
 
-router.get('/logout', handleAuthenticatedRequest(logout));
+router.get('/users/logout', handleAuthenticatedRequest(logout));
 
-router.get('/get-websocket-token', protect, handleAuthenticatedRequest(getWebSocketToken));
+router.get('/users/get-websocket-token', protect, handleAuthenticatedRequest(getWebSocketToken));
 
 export default router;
 
