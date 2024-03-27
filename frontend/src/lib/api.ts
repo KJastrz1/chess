@@ -1,5 +1,5 @@
 import { IGame, ILoginUser, INewUser } from "@chess/types";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 const API_URL = "http://localhost:3000/api/v1";
 axios.defaults.withCredentials = true;
@@ -28,9 +28,9 @@ export async function signInAccount(user: ILoginUser) {
 export async function getCurrentUser() {
 
     try {
-        const response = await axios.get(`${API_URL}/users/get-current-user`);       
+        const response = await axios.get(`${API_URL}/users/get-current-user`);
         return response.data;
-    } catch (error) {       
+    } catch (error) {
         throw new Error('Failed to fetch user data');
     }
 }
@@ -58,10 +58,16 @@ export async function getWebSocketToken() {
 // ============================================================
 export async function getGameById(gameId: string) {
     try {
-        const response = await axios.get<IGame>(`${API_URL}/games/${gameId}`);
+        const response = await axios.get(`${API_URL}/games/${gameId}`);
         return response.data;
     } catch (error) {
-        throw new Error('Failed to fetch game data');
+        if (error.response && error.response.status === 404) {
+            throw new Error('Game not found');
+        } else if (error.response && error.response.status === 400) {
+            throw new Error('Invalid game ID format');
+        } else {
+            throw new Error('Failed to fetch game data');
+        }
     }
 }
 

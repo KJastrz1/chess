@@ -19,7 +19,7 @@ const Home = () => {
     const { data: game, isLoading: isLoadingGame } = useGetGameById(activeGameId);
     const [searchValue, setSearchValue] = useState("");
     const debouncedSearch = useDebounce(searchValue, 750);
-    const { data: games, isLoading: isLoadingGames, error: errorGames } = useSearchGames(debouncedSearch);
+    const { data: games, isLoading: isLoadingGames } = useSearchGames(debouncedSearch);
 
     const handleCreate = async () => {
         const data = await createGame();
@@ -59,9 +59,9 @@ const Home = () => {
                 </Button>
 
 
-                <div className="flex flex-row items-center gap-4">
-                    <Input type="text" placeholder="Enter game ID" onChange={(e) => { setGameId(e.target.value) }} />
-                    <Button className="whitespace-nowrap ml-4" disabled={isLoadingGame} onClick={handleJoin}>
+                <div className="flex flex-row items-center gap-2 md:gap-4">
+                    <Input className="w-56" type="text" placeholder="Enter game ID" onChange={(e) => { setGameId(e.target.value) }} />
+                    <Button className="whitespace-nowrap" disabled={isLoadingGame} onClick={handleJoin}>
                         {isLoadingGame ? (
                             <div className="flex-center">
                                 <LoadingButton />

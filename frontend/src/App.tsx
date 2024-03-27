@@ -9,6 +9,7 @@ import RootLayout from "./pages/_root/RootLayout"
 const App = () => {
   return (
     <main className="flex flex-col min-h-screen bg-light-2 dark:bg-gray-800 text-dark-1 dark:text-light-2">
+      
       <Routes>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
@@ -20,6 +21,7 @@ const App = () => {
           <Route path="/game/:id" element={<Board />} />
         </Route>
       </Routes>
+    
     </main >
   )
 

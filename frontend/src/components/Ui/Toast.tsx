@@ -6,8 +6,8 @@ export enum ToastType {
 }
 
 
-const getIcon = (type) => {
-    switch (type) {
+const getIcon = (typeOfToast: ToastType) => {
+    switch (typeOfToast) {
         case ToastType.INFO:
             return (
                 <svg className="flex-shrink-0 h-4 w-4 text-blue-500 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -41,9 +41,9 @@ const getIcon = (type) => {
 
 
 
-const Toast = ({ type, message }: { type: ToastType, message: string }) => {
+export const Toast = ({ typeOfToast, message }: { typeOfToast: ToastType, message: string }) => {
 
-    const icon = getIcon(type);
+    const icon = getIcon(typeOfToast);
     const typeStyles = {
         [ToastType.INFO]: "text-blue-500 bg-blue-100",
         [ToastType.SUCCESS]: "text-green-500 bg-green-100",
@@ -53,7 +53,7 @@ const Toast = ({ type, message }: { type: ToastType, message: string }) => {
 
     return (
         <div className={`flex items-center w-full max-w-xs `}>
-            <div className={`inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg ${typeStyles[type]}`}>
+            <div className={`inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg ${typeStyles[typeOfToast]}`}>
                 {icon}
             </div>
             <div className="mx-4 text-sm font-normal">{message}</div>
@@ -62,4 +62,4 @@ const Toast = ({ type, message }: { type: ToastType, message: string }) => {
     );
 };
 
-export default Toast;  
+
