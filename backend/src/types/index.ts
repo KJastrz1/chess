@@ -71,10 +71,8 @@ export type INewUser = {
 //================================================
 export type IGame = {
     _id: string;
-    player1: string;
-    player1Name: string;
-    player2: string;
-    player2Name: string;
+    player1: IUser;    
+    player2: IUser;
     status: string;
     whosMove: string;
     board: ChessSquare[][];

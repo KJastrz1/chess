@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
-import { ChessSquare, IGame, PossibleMove, SelectedPiece, White, initialBoard, } from '@/types';
+import { ChessSquare, IGame, IMove, PossibleMove, SelectedPiece, White, initialBoard, } from '@/types';
 import Loader from '@/components/Ui/Loader';
 import { useGetGameById, useGetWebSocketToken } from '@/lib/queries';
 
@@ -11,18 +11,21 @@ import { useUserContext } from '@/context/AuthContext';
 import { UseQueryResult } from 'react-query';
 
 
+
 const SOCKET_SERVER_URL = "http://localhost:3000";
 let socket: Socket;
 
 function Board() {
-  const { id: gameId } = useParams<{ id?: string }>();
-  const { data: game, isLoading: isLoadingGame, error } = useGetGameById(gameId) as UseQueryResult<IGame, Error>;
+  const { id: gameId } = useParams<{ id: string }>();
+  const { data: game, isLoading: isLoadingGame, error: errorGame } = useGetGameById(gameId) as UseQueryResult<IGame, Error>;
   const { data: token, isLoading: isLoadingToken, error: errorToken } = useGetWebSocketToken();
   const [selectedPiece, setSelectedPiece] = useState<SelectedPiece | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<PossibleMove[]>([]);
   const [gameState, setGameState] = useState<ChessSquare[][]>(initialBoard);
   const { user } = useUserContext();
-  const isWhitePlayer = game?.whitePlayer === user._id;
+  const [isWhitePlayer, setIsWhitePlayer] = useState(false);
+  const [isPlayerTurn, setIsPlayerTurn] = useState(false);
+  const [moves, setMoves] = useState<IMove[]>([]);
 
   useEffect(() => {
     if (!socket && token) {
@@ -31,7 +34,6 @@ function Board() {
           token
         }
       });
-
       socket.on('connect', () => {
         console.log('Połączono z serwerem socket.io');
         socket.emit('joinGame', gameId, (message: string) => {
@@ -39,35 +41,56 @@ function Board() {
         });
       });
 
-      socket.on("receiveMove", (move) => {
+      socket.on("receiveMove", (move: IMove) => {
         console.log("Otrzymano ruch od serwera:", move);
+        setIsPlayerTurn(true);
+        const newGameState = [...gameState];
+        const movedPiece = newGameState[move.srcRow][move.srcCol];
+        newGameState[move.destRow][move.destCol] = movedPiece;
+        newGameState[move.srcRow][move.srcCol] = "None";
+        setGameState(newGameState);
       });
+      socket.on('playerLeft',()=>{
+        console.log('player left')
+        socket.disconnect();
+      })
     }
+  }, [token, gameId]);
+
+
+  useEffect(() => {
     return () => {
       if (socket) {
         console.log('disconnecting socket.io');
         socket.disconnect();
       }
     };
-  }, [token, gameId]);
+  }, []);
 
   useEffect(() => {
     if (game && game.board) {
       setGameState(game.board);
-      console.log('game:', game)
+      setIsPlayerTurn(game.whosMove === user._id);
+      setIsWhitePlayer(game.whitePlayer === user._id);
+      setMoves(game.moves);
     }
-
   }, [game]);
 
-  if (error || errorToken) return <div>Error loading the game.</div>;
+  if (errorGame || errorToken) return <div>Error loading the game.</div>;
   if (!socket || isLoadingGame || isLoadingToken) {
     return <Loader />
   }
 
   const handleClick = (figure: ChessSquare, row: number, col: number) => {
+
+    if (!isPlayerTurn) {
+      console.log('Not your turn');
+      return;
+    }
+
     const isFigureWhite = Object.values(White).includes(figure);
     let isOwnFigure = false;
-    console.log('isFigureWhite', isFigureWhite);
+
     if ((isWhitePlayer && isFigureWhite) || (!isWhitePlayer && !isFigureWhite)) {
       isOwnFigure = true;
     }
@@ -82,6 +105,7 @@ function Board() {
       setGameState(newGameState);
       setPossibleMoves([]);
       setSelectedPiece(null);
+      setIsPlayerTurn(false);
       socket.emit('sendMove', {
         srcRow: selectedPiece.currentRow,
         srcCol: selectedPiece.currentCol,
@@ -129,9 +153,21 @@ function Board() {
   };
 
   return (
-    <div className="flex justify-center items-center h-full w-full py-2 md:px-4">
+    <div className="flex justify-start items-center gap-5 h-full w-full py-2 md:px-4">
       <div className="grid grid-cols-8 gap-0 ">
         {renderBoard()}
+      </div>
+      <div className="flex flex-col justify-center self-start p-5">
+        {isWhitePlayer && <div className="text-xl font-semibold">You are white</div>}
+        {!isWhitePlayer && <div className="text-xl font-semibold">You are black</div>}
+        {isPlayerTurn && <div className="text-xl font-semibold">Your turn</div>}
+        {!isPlayerTurn && <div className="text-xl font-semibold">Opponent's turn</div>}
+        <div className="text-xl font-semibold">Moves:</div>
+        <div className="flex flex-col gap-2">
+          {moves.map((move, index) => (
+            <div key={index} className="text-lg">{`${move.srcRow},${move.srcCol} -> ${move.destRow},${move.destCol}`}</div>
+          ))}
+        </div>
       </div>
     </div>
   );

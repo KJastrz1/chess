@@ -20,9 +20,9 @@ const RootLayout = () => {
     return (
         <div className="w-full h-full">
             <Navbar />
-
+            <div className=" ">
             <Outlet />
-
+            </div>
         </div>
     );
 };

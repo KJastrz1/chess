@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import { AuthProvider } from './context/AuthContext';
+import { ToastContainer } from 'react-toastify';
 
 
 
@@ -15,9 +16,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-         
-            <App />
-       
+          <ToastContainer />
+          <App />
+
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter >

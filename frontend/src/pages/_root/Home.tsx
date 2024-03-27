@@ -1,25 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCreateGame, useGetGameById, useSearchGames } from "../../lib/queries"
 import { FaRegClock } from 'react-icons/fa'
 import { useNavigate } from "react-router-dom";
-
 import useDebounce from "@/hooks/useDebounce";
 import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
-
 import LoadingButton from "@/components/Ui/LoadingButton";
-import { ref } from "yup";
-import { IGameListItem } from "@chess/types";
-
-
+import { IGame, IGameListItem } from "@/types";
+import { UseQueryResult } from "react-query";
 
 const Home = () => {
     
-    const [gameId, setGameId] = useState('');    
+    const [gameId, setGameId] = useState('');  
+    const [activeGameId, setActiveGameId] = useState('');
     const navigate = useNavigate();
-    const { mutateAsync: createGame, isLoading: isLoadingCreateGame, data } = useCreateGame();
-    const { data: game, isLoading: isLoadingGame, error, refetch  } = useGetGameById(gameId);
+    const { mutateAsync: createGame, isLoading: isLoadingCreateGame } = useCreateGame();
+    const { data: game, isLoading: isLoadingGame } = useGetGameById(activeGameId);
     const [searchValue, setSearchValue] = useState("");
     const debouncedSearch = useDebounce(searchValue, 750);
     const { data: games, isLoading: isLoadingGames, error: errorGames } = useSearchGames(debouncedSearch);
@@ -34,12 +31,16 @@ const Home = () => {
     }
 
     const handleJoin = async () => {
-        await refetch();
+        setActiveGameId(gameId);
         if (!game) {
             return;
-        }
-        navigate(`/game/${game._id}`);
+        }       
     }
+    useEffect(() => {
+        if (game) {
+            navigate(`/game/${game._id}`);
+        }
+    }, [game])
 
 
     return (
@@ -66,7 +67,7 @@ const Home = () => {
                                 <LoadingButton />
                             </div>
                         ) : "Join game"}
-                    </Button>
+                    </Button>                    
                 </div>
             </div>
 
@@ -74,8 +75,7 @@ const Home = () => {
                 <div className="flex w-full h-full p-10 justify-center items-center">
                     <Loader />
                 </div>}
-
-
+          
             {!isLoadingGames && games &&
                 <div className="w-full md:p-10">
                     <div className="grid grid-cols-3 text-lg font-semibold py-4 border-b border-gray-800 dark:border-gray-200">
@@ -94,6 +94,7 @@ const Home = () => {
                                 <Button onClick={() => navigate(`/game/${game._id}`)} >
                                     Join Game
                                 </Button>
+                               
                             </span>
                         </div>
                     ))}

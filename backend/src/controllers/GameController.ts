@@ -1,4 +1,4 @@
-import {  Response } from 'express';
+import { Response } from 'express';
 import mongoose from 'mongoose';
 import { User } from '../models/User';
 import { Game } from '../models/Game';
@@ -6,7 +6,7 @@ import { IGame } from '../types/index';
 import { AuthenticatedRequest } from '@src/types/express';
 
 export const createGame = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    try {       
+    try {
         const game = new Game({
             player1: req.user._id,
         });
@@ -27,7 +27,7 @@ export const getAllGames = async (req: GetAllGamesRequest, res: Response): Promi
     console.log('getAllGames', req.query.searchTerm);
     try {
         let games;
-      
+
         if (req.query.searchTerm) {
 
             const users = await User.find({
@@ -64,7 +64,9 @@ export const getGameById = async (req: GetGameByIdRequest, res: Response): Promi
         return;
     }
     try {
-        const game = await Game.findById(id);
+        const game = await Game.findById(id)
+            .populate('player1', 'username')
+            .populate('player2', 'username');
         if (!game) {
             res.status(404).json({ message: 'Game not found' });
             return;

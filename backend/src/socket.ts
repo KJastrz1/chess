@@ -43,7 +43,7 @@ export default (io: SocketIOServer) => {
         socket.on('joinGame', async (gameId: string, cb: (message: string) => void) => {
 
             try {
-                console.log('user o id:', socket.data.user._id, " dolaczyl do gry");
+                console.log('user o id:', socket.data.user._id, " dolaczyl do gry o id: ", gameId);
                 const game: IGameModel | null = await Game.findOne({ _id: gameId });
                 // console.log('game:player2', game?.player2);                
                 if (!game) {
@@ -55,11 +55,14 @@ export default (io: SocketIOServer) => {
                     && game.player2 === null) {
                     game.player2 = socket.data.user._id;
                     game.status = 'in_progress';
+                    console.log('Gracz dolaczyl do gry jako drugi');
 
                     const players = [game.player1, game.player2];
                     const whitePlayerIndex = Math.floor(Math.random() * players.length);
                     game.whitePlayer = players[whitePlayerIndex];
                     game.whosMove = game.whitePlayer;
+                    console.log('Gracz bialy:', game.whitePlayer);
+                    console.log('Gracz wykonujacy ruch:', game.whosMove);
                 }
 
                 if (game.player1.toString() !== socket.data.user._id.toString()
@@ -68,10 +71,9 @@ export default (io: SocketIOServer) => {
                     cb('Player not assigned to this game');
                     return;
                 }
-                if (!gamesState[gameId]) {
-                    gamesState[gameId] = game;
-                }
-                console.log('Dołączono do gry:', gameId);
+
+                gamesState[gameId] = game;
+
                 socket.data.gameId = gameId;
                 socket.join(gameId);
             } catch (error) {
@@ -119,16 +121,16 @@ export default (io: SocketIOServer) => {
         })
 
         socket.on('disconnect', async (reason) => {
-            console.log(`Klient rozłączony: ${socket.id}, Powód: ${reason}`);
+            console.log(`User rozłączony: ${socket.data.user._id}, Powód: ${reason}`);
 
             const gameId = socket.data.gameId;
-
+            socket.to(gameId).emit('playerLeft');
             if (gameId && gamesState[gameId]) {
                 const gameToUpdate = gamesState[gameId];
 
 
                 try {
-                    await Game.findByIdAndUpdate(gameId, gameToUpdate);
+                    const game = await Game.findByIdAndUpdate(gameId, gameToUpdate);
                     console.log(`Gra ${gameId} zaktualizowana po rozłączeniu klienta.`);
                 } catch (error) {
                     console.error(`Błąd podczas aktualizacji gry ${gameId}:`, error);
