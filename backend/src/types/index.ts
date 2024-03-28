@@ -99,3 +99,4 @@ export type IGameListItem = {
     moveTime?: number;
 };
 
+export type GameStatus = 'waiting' | 'in_progress' | 'finished';

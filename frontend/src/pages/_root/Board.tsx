@@ -3,22 +3,18 @@ import { useParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { ChessSquare, IGame, IMove, PossibleMove, SelectedPiece, White, initialBoard, } from '@/types';
 import Loader from '@/components/Ui/Loader';
-import { useGetGameById, useGetWebSocketToken } from '@/lib/queries';
-
+import { useGetWebSocketToken } from '@/lib/queries';
 import { calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '@/logic/chessLogic';
 import Square from '@/shared/Square';
 import { useUserContext } from '@/context/AuthContext';
-import { UseQueryResult } from 'react-query';
-
-
 
 const SOCKET_SERVER_URL = "http://localhost:3000";
 let socket: Socket;
 
 function Board() {
   const { id: gameId } = useParams<{ id: string }>();
-  const { data: game, isLoading: isLoadingGame, error: errorGame } = useGetGameById(gameId) as UseQueryResult<IGame, Error>;
   const { data: token, isLoading: isLoadingToken, error: errorToken } = useGetWebSocketToken();
+  const [isLoadingGameFromSocket, setIsLoadingGameFromSocket] = useState(true);
   const [selectedPiece, setSelectedPiece] = useState<SelectedPiece | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<PossibleMove[]>([]);
   const [gameState, setGameState] = useState<ChessSquare[][]>(initialBoard);
@@ -26,6 +22,17 @@ function Board() {
   const [isWhitePlayer, setIsWhitePlayer] = useState(false);
   const [isPlayerTurn, setIsPlayerTurn] = useState(false);
   const [moves, setMoves] = useState<IMove[]>([]);
+  const [game, setGame] = useState<IGame | null>(null);
+
+  const executeMove = (move: IMove) => {
+    console.log("Wykonano ruch:", move);
+    const newGameState = [...gameState];
+    const movedPiece = newGameState[move.srcRow][move.srcCol];
+    newGameState[move.destRow][move.destCol] = movedPiece;
+    newGameState[move.srcRow][move.srcCol] = "None";
+    setGameState(newGameState);
+    setMoves((prevMoves) => [...prevMoves, move]);
+  };
 
   useEffect(() => {
     if (!socket && token) {
@@ -40,17 +47,23 @@ function Board() {
           console.log(message);
         });
       });
+      socket.on('receiveGame', (receivedGame: IGame) => {
+        console.log('Otrzymano aktualizację gry:', receivedGame);
+        setGame(receivedGame);
+        setGameState(receivedGame.board);
+        setIsPlayerTurn(receivedGame.whosMove === user._id);
+        setIsWhitePlayer(receivedGame.whitePlayer === user._id);
+        setMoves(receivedGame.moves);
+        setIsLoadingGameFromSocket(false);
+      });
 
       socket.on("receiveMove", (move: IMove) => {
         console.log("Otrzymano ruch od serwera:", move);
+        executeMove(move);
         setIsPlayerTurn(true);
-        const newGameState = [...gameState];
-        const movedPiece = newGameState[move.srcRow][move.srcCol];
-        newGameState[move.destRow][move.destCol] = movedPiece;
-        newGameState[move.srcRow][move.srcCol] = "None";
-        setGameState(newGameState);
+
       });
-      socket.on('playerLeft',()=>{
+      socket.on('playerLeft', () => {
         console.log('player left')
         socket.disconnect();
       })
@@ -67,19 +80,12 @@ function Board() {
     };
   }, []);
 
-  useEffect(() => {
-    if (game && game.board) {
-      setGameState(game.board);
-      setIsPlayerTurn(game.whosMove === user._id);
-      setIsWhitePlayer(game.whitePlayer === user._id);
-      setMoves(game.moves);
-    }
-  }, [game]);
-
-  if (errorGame || errorToken) return <div>Error loading the game.</div>;
-  if (!socket || isLoadingGame || isLoadingToken) {
-    return <Loader />
+  if (errorToken) return <div>Error loading the game.</div>;
+  if (!socket || isLoadingGameFromSocket || isLoadingToken) {
+    return <Loader />;
   }
+
+
 
   const handleClick = (figure: ChessSquare, row: number, col: number) => {
 
@@ -98,21 +104,12 @@ function Board() {
     const isPossibleMove = checkIfPossibleMove(possibleMoves, row, col);
 
     if (isPossibleMove && selectedPiece) {
-      const newGameState = [...gameState];
-      const movedPiece = newGameState[selectedPiece.currentRow][selectedPiece.currentCol];
-      newGameState[row][col] = movedPiece;
-      newGameState[selectedPiece.currentRow][selectedPiece.currentCol] = "None";
-      setGameState(newGameState);
+      const move = { srcRow: selectedPiece.currentRow, srcCol: selectedPiece.currentCol, destRow: row, destCol: col, figure: figure };
+      executeMove(move);
       setPossibleMoves([]);
       setSelectedPiece(null);
       setIsPlayerTurn(false);
-      socket.emit('sendMove', {
-        srcRow: selectedPiece.currentRow,
-        srcCol: selectedPiece.currentCol,
-        destRow: row,
-        destCol: col,
-        figure: movedPiece
-      }, gameId, (message: string) => {
+      socket.emit('sendMove', move, gameId, (message: string) => {
         console.log(message);
       })
 
@@ -157,7 +154,10 @@ function Board() {
       <div className="grid grid-cols-8 gap-0 ">
         {renderBoard()}
       </div>
-      <div className="flex flex-col justify-center self-start p-5">
+      {game?.status === 'waiting' && <div className="flex flex-col justify-center self-start p-5">
+        <div className="text-xl font-semibold">Waiting for the opponent to join...</div>
+      </div>}
+      {game?.status !== 'waiting' && <div className="flex flex-col justify-center self-start p-5">
         {isWhitePlayer && <div className="text-xl font-semibold">You are white</div>}
         {!isWhitePlayer && <div className="text-xl font-semibold">You are black</div>}
         {isPlayerTurn && <div className="text-xl font-semibold">Your turn</div>}
@@ -168,7 +168,7 @@ function Board() {
             <div key={index} className="text-lg">{`${move.srcRow},${move.srcCol} -> ${move.destRow},${move.destCol}`}</div>
           ))}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

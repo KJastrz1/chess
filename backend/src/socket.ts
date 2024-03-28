@@ -76,6 +76,7 @@ export default (io: SocketIOServer) => {
 
                 socket.data.gameId = gameId;
                 socket.join(gameId);
+                io.to(gameId).emit('receiveGame', game);
             } catch (error) {
                 console.error('Błąd podczas dołączania do gry:', error);
                 cb('Error joining the game');

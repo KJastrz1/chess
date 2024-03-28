@@ -1,4 +1,4 @@
-import { ChessSquare, IMove, initialBoard } from '../types/index';
+import { ChessSquare, IMove, initialBoard, GameStatus as GameStatus } from '../types/index';
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IGameModel extends Document {
@@ -10,7 +10,7 @@ export interface IGameModel extends Document {
     whosMove: Types.ObjectId;
     moveTime: number;
     moves: IMove[];
-    status: 'waiting' | 'in_progress' | 'finished';
+    status: GameStatus;
     winner: Types.ObjectId | 'draw' | null;
     createdAt: Date;
     updatedAt: Date;
@@ -33,7 +33,7 @@ const gameSchema = new Schema<IGameModel>({
         destCol: { type: Number },
         piece: { type: String },
     }],
-    status: { type: String, required: true, enum: ['waiting', 'in_progress', 'finished'], default: 'waiting' },
+    status: { type: String, required: true, default: 'waiting' },
     winner: { type: Schema.Types.ObjectId, default: null },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
