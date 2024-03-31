@@ -6,6 +6,7 @@ import Button from '@/components/Ui/Button';
 import { useUserContext } from '@/context/AuthContext';
 import TextField from '@/components/Ui/TextField';
 import { Link } from 'react-router-dom';
+import { ILoginUser } from '@/types';
 
 const loginValidationSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email address').required('Email is required'),
@@ -18,8 +19,8 @@ const LoginPage = () => {
   return (
     <div>
       <h2 className='text-3xl mb-5'>Login</h2>
-      <Formik
-        initialValues={{ email: '', password: '' }}
+      <Formik<ILoginUser>
+        initialValues={{ email: '', password: ''}}
         validationSchema={loginValidationSchema}
         onSubmit={async (values, { setSubmitting }) => {
           setSubmitting(true);

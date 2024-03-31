@@ -48,7 +48,7 @@ const Navbar = () => {
             </ul>
 
             {/* Menu hamburger icon*/}
-            <div onClick={handleNav} className='block md:hidden'>
+            <div onClick={handleNav} className='z-20 block md:hidden'>
                 {showMenu ? <AiOutlineClose size={30} /> : <AiOutlineMenu size={30} />}
             </div>
 
@@ -56,7 +56,7 @@ const Navbar = () => {
             <ul
                 className={
                     showMenu
-                        ? 'fixed md:hidden left-0 top-0 w-[60%] h-full border-r border-r-gray-900 bg-white dark:bg-gray-900 ease-in-out duration-500 p-5'
+                        ? 'z-10 fixed md:hidden left-0 top-0 w-full sm:w-[60%] h-full border-r border-r-gray-900 bg-white dark:bg-gray-900 ease-in-out duration-500 p-5'
                         : 'ease-in-out w-[60%] duration-500 fixed top-0 bottom-0 left-[-100%]'
                 }
             >
@@ -73,15 +73,17 @@ const Navbar = () => {
                 {navBarLinks.map((link: INavLink) => {
                     const isActive = pathname === link.route;
                     return (
-                        <li key={link.label} className='my-5'>
+                        <li key={link.label} className='my-4'>
                             <NavLink to={link.route} onClick={handleNav} className={`p-2 hover:bg-primary-500 rounded-xl cursor-pointer duration-300 hover:text-black ${isActive ? 'bg-primary-500 text-black' : ''
                                 }`}>
                                 {link.label}
                             </NavLink>
                         </li>)
                 })}
-                <ThemeSwitch />
-                <button onClick={logout} className="block">Logout</button>
+                <div className='p-2'>
+                    <ThemeSwitch />
+                    <button onClick={logout} className="block my-3">Logout</button>
+                </div>
             </ul>
         </nav>
     );

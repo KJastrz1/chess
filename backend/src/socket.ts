@@ -105,9 +105,9 @@ export default (io: SocketIOServer) => {
 
             const player = game.whitePlayer.toString() === socket.data.user._id.toString() ? 'White' : 'Black';
 
-            const { board } = game;
+            
 
-            if (!isMovePossible(board, move, player)) {
+            if (!isMovePossible(game.board, move, player)) {
                 console.log('Ruch niemożliwy');
                 cb('Invalid move');
                 return;

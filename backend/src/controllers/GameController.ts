@@ -24,7 +24,6 @@ export interface GetAllGamesRequest extends AuthenticatedRequest {
     };
 }
 export const getAllGames = async (req: GetAllGamesRequest, res: Response): Promise<void> => {
-    console.log('getAllGames', req.query.searchTerm);
     try {
         let games;
 

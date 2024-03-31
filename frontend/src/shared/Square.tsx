@@ -1,5 +1,4 @@
-import { ChessSquare } from "@chess/types";
-
+import { ChessSquare } from "@/types";
 
 interface SquareProps {
     isWhite?: boolean;
@@ -26,13 +25,13 @@ const Square = ({ onClick, isWhite = false, figure, highlight, row, col, capture
                 )}
                 {highlight && !capture && (
                     <div className="absolute inset-0 flex justify-center items-center">
-                        <div className="bg-green-400 bg-opacity-80 rounded-full w-10 h-10"></div>
+                        <div className="bg-green-400 bg-opacity-80 rounded-full w-1/2 h-1/2"></div>
                     </div>
                 )}
                 {figure !== "None" ? (
                     <img src={imagePath} alt={figure} className='w-14 h-14 sm:w-20 sm:h-20' />
                 ) : (
-                    <div className="w-14 h-14 sm:w-20 sm:h-20 opacity-0">Empty</div>
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 opacity-0"></div>
                 )}
             </button>
         </div>

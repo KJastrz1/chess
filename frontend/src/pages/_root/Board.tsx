@@ -26,7 +26,7 @@ function Board() {
 
   const executeMove = (move: IMove) => {
     console.log("Wykonano ruch:", move);
-    const newGameState = [...gameState];
+    const newGameState = gameState.map(row => [...row]);
     const movedPiece = newGameState[move.srcRow][move.srcCol];
     newGameState[move.destRow][move.destCol] = movedPiece;
     newGameState[move.srcRow][move.srcCol] = "None";
@@ -70,6 +70,9 @@ function Board() {
     }
   }, [token, gameId]);
 
+  useEffect(() => {
+    console.log("gameState changed:", gameState);
+  }, [gameState]);
 
   useEffect(() => {
     return () => {
@@ -104,7 +107,7 @@ function Board() {
     const isPossibleMove = checkIfPossibleMove(possibleMoves, row, col);
 
     if (isPossibleMove && selectedPiece) {
-      const move = { srcRow: selectedPiece.currentRow, srcCol: selectedPiece.currentCol, destRow: row, destCol: col, figure: figure };
+      const move: IMove = { srcRow: selectedPiece.currentRow, srcCol: selectedPiece.currentCol, destRow: row, destCol: col, figure: figure };
       executeMove(move);
       setPossibleMoves([]);
       setSelectedPiece(null);
@@ -150,14 +153,15 @@ function Board() {
   };
 
   return (
-    <div className="flex justify-start items-center gap-5 h-full w-full py-2 md:px-4">
+    <div className="flex flex-col md:flex-row justify-start items-center gap-5 h-full w-full py-2 px-2 md:px-4">
       <div className="grid grid-cols-8 gap-0 ">
         {renderBoard()}
       </div>
+
       {game?.status === 'waiting' && <div className="flex flex-col justify-center self-start p-5">
         <div className="text-xl font-semibold">Waiting for the opponent to join...</div>
       </div>}
-      {game?.status !== 'waiting' && <div className="flex flex-col justify-center self-start p-5">
+      {game?.status !== 'waiting' && <div className="flex flex-col justify-center self-start md:p-5">
         {isWhitePlayer && <div className="text-xl font-semibold">You are white</div>}
         {!isWhitePlayer && <div className="text-xl font-semibold">You are black</div>}
         {isPlayerTurn && <div className="text-xl font-semibold">Your turn</div>}
