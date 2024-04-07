@@ -26,7 +26,6 @@ export async function signInAccount(user: ILoginUser) {
 }
 
 export async function getCurrentUser() {
-
     try {
         const response = await axios.get(`${API_URL}/users/get-current-user`);
         return response.data;

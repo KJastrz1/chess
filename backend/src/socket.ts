@@ -71,6 +71,12 @@ export default (io: SocketIOServer) => {
                     cb('Player not assigned to this game');
                     return;
                 }
+                if(game.player1.toString() === socket.data.user._id.toString()){
+                    game.player1Connected = true;
+                }
+                if(game.player2.toString() === socket.data.user._id.toString()){
+                    game.player2Connected = true;
+                }
 
                 gamesState[gameId] = game;
 
@@ -84,7 +90,7 @@ export default (io: SocketIOServer) => {
         });
 
         socket.on('sendMove', async (move: IMove, gameId: string, cb: (message: string) => void) => {
-            console.log('Ruch :', move);
+            console.log("ruch od gracza", socket.data.user._id)
             const game: IGameModel | null = gamesState[gameId];
             if (!game) {
                 console.log('Gra nie znaleziona');
@@ -105,8 +111,6 @@ export default (io: SocketIOServer) => {
 
             const player = game.whitePlayer.toString() === socket.data.user._id.toString() ? 'White' : 'Black';
 
-            
-
             if (!isMovePossible(game.board, move, player)) {
                 console.log('Ruch niemożliwy');
                 cb('Invalid move');
@@ -115,10 +119,11 @@ export default (io: SocketIOServer) => {
             game.board[move.destRow][move.destCol] = game.board[move.srcRow][move.srcCol];
             game.board[move.srcRow][move.srcCol] = 'None';
             game.moves.push(move);
-
-            game.whosMove = game.whosMove === game.player1 ? game.player2 : game.player1;
-
-            socket.to(gameId).emit('receiveMove', move);
+            console.log('otrzymano ruch teraz kolej:', game.whosMove);
+            game.whosMove = game.whosMove.toString() === game.player1.toString() ? game.player2 : game.player1;
+            console.log('otrzymano ruch teraz kolej:', game.whosMove);
+            gamesState[gameId] = game;
+            socket.to(gameId).emit('receiveMove', move, game.board);
         })
 
         socket.on('disconnect', async (reason) => {
@@ -128,7 +133,12 @@ export default (io: SocketIOServer) => {
             socket.to(gameId).emit('playerLeft');
             if (gameId && gamesState[gameId]) {
                 const gameToUpdate = gamesState[gameId];
-
+                if (gameToUpdate.player1.toString() === socket.data.user._id.toString()) {
+                    gameToUpdate.player1Connected = false;
+                }
+                if (gameToUpdate.player2.toString() === socket.data.user._id.toString()) {
+                    gameToUpdate.player2Connected = false;
+                }
 
                 try {
                     const game = await Game.findByIdAndUpdate(gameId, gameToUpdate);

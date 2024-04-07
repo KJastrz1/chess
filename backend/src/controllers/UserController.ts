@@ -130,6 +130,7 @@ export const getProfile = async (req: GetProfileRequest, res: Response): Promise
 
 
 export const getWebSocketToken = async (req: AuthenticatedRequest, res: Response) => {
+    console.log('getWebSocketToken');
     const user = req.user;
     const websocketToken = jwt.sign({ _id: user._id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 

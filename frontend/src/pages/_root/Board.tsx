@@ -7,6 +7,7 @@ import { useGetWebSocketToken } from '@/lib/queries';
 import { calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '@/logic/chessLogic';
 import Square from '@/shared/Square';
 import { useUserContext } from '@/context/AuthContext';
+import { set } from 'zod';
 
 const SOCKET_SERVER_URL = "http://localhost:3000";
 let socket: Socket;
@@ -23,9 +24,10 @@ function Board() {
   const [isPlayerTurn, setIsPlayerTurn] = useState(false);
   const [moves, setMoves] = useState<IMove[]>([]);
   const [game, setGame] = useState<IGame | null>(null);
+  const [opponentLeft, setOpponentLeft] = useState(false);
 
   const executeMove = (move: IMove) => {
-    console.log("Wykonano ruch:", move);
+    // console.log("Wykonano ruch:", move);
     const newGameState = gameState.map(row => [...row]);
     const movedPiece = newGameState[move.srcRow][move.srcCol];
     newGameState[move.destRow][move.destCol] = movedPiece;
@@ -34,8 +36,9 @@ function Board() {
     setMoves((prevMoves) => [...prevMoves, move]);
   };
 
-  useEffect(() => {
+  useEffect(() => {   
     if (!socket && token) {
+      console.log('Tworzenie socket.io');
       socket = io(SOCKET_SERVER_URL, {
         auth: {
           token
@@ -48,7 +51,7 @@ function Board() {
         });
       });
       socket.on('receiveGame', (receivedGame: IGame) => {
-        console.log('Otrzymano aktualizację gry:', receivedGame);
+        // console.log('Otrzymano aktualizację gry:', receivedGame);
         setGame(receivedGame);
         setGameState(receivedGame.board);
         setIsPlayerTurn(receivedGame.whosMove === user._id);
@@ -57,22 +60,24 @@ function Board() {
         setIsLoadingGameFromSocket(false);
       });
 
-      socket.on("receiveMove", (move: IMove) => {
+      socket.on("receiveMove", (move: IMove, gameState: ChessSquare[][]) => {
         console.log("Otrzymano ruch od serwera:", move);
-        executeMove(move);
+        // executeMove(move);
         setIsPlayerTurn(true);
+        setGameState(gameState);
+        setMoves((prevMoves) => [...prevMoves, move]);
 
       });
       socket.on('playerLeft', () => {
         console.log('player left')
-        socket.disconnect();
+        setOpponentLeft(true);
       })
     }
-  }, [token, gameId]);
+  }, [token]);
 
-  useEffect(() => {
-    console.log("gameState changed:", gameState);
-  }, [gameState]);
+  // useEffect(() => {
+  //   console.log("gameState changed:", gameState);
+  // }, [gameState]);
 
   useEffect(() => {
     return () => {
@@ -91,7 +96,7 @@ function Board() {
 
 
   const handleClick = (figure: ChessSquare, row: number, col: number) => {
-
+    console.log('Clicked:', figure, row, col);
     if (!isPlayerTurn) {
       console.log('Not your turn');
       return;
@@ -107,7 +112,7 @@ function Board() {
     const isPossibleMove = checkIfPossibleMove(possibleMoves, row, col);
 
     if (isPossibleMove && selectedPiece) {
-      const move: IMove = { srcRow: selectedPiece.currentRow, srcCol: selectedPiece.currentCol, destRow: row, destCol: col, figure: figure };
+      const move: IMove = { srcRow: selectedPiece.currentRow, srcCol: selectedPiece.currentCol, destRow: row, destCol: col, figure: selectedPiece.figure };
       executeMove(move);
       setPossibleMoves([]);
       setSelectedPiece(null);
@@ -158,6 +163,12 @@ function Board() {
         {renderBoard()}
       </div>
 
+      {opponentLeft && (
+        <div className="flex flex-col justify-center self-start p-5">
+          <div className="text-xl font-semibold text-red">Opponent has left the game!</div>
+          <div className="text-md text-orange-400">Game was saved. You can safely leave.</div>
+        </div>
+      )}
       {game?.status === 'waiting' && <div className="flex flex-col justify-center self-start p-5">
         <div className="text-xl font-semibold">Waiting for the opponent to join...</div>
       </div>}
