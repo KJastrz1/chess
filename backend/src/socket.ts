@@ -71,10 +71,10 @@ export default (io: SocketIOServer) => {
                     cb('Player not assigned to this game');
                     return;
                 }
-                if(game.player1.toString() === socket.data.user._id.toString()){
+                if (game.player1.toString() === socket.data.user._id.toString()) {
                     game.player1Connected = true;
                 }
-                if(game.player2.toString() === socket.data.user._id.toString()){
+                if (game.player2 !== null && game.player2.toString() === socket.data.user._id.toString()) {
                     game.player2Connected = true;
                 }
 
@@ -136,7 +136,8 @@ export default (io: SocketIOServer) => {
                 if (gameToUpdate.player1.toString() === socket.data.user._id.toString()) {
                     gameToUpdate.player1Connected = false;
                 }
-                if (gameToUpdate.player2.toString() === socket.data.user._id.toString()) {
+                if (gameToUpdate.player2.toString() !== null &&
+                    gameToUpdate.player2.toString() === socket.data.user._id.toString()) {
                     gameToUpdate.player2Connected = false;
                 }
 

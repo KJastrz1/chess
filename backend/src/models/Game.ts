@@ -17,6 +17,7 @@ export interface IGameModel extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
+
 const gameSchema = new Schema<IGameModel>({
     player1: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     player2: { type: Schema.Types.ObjectId, ref: 'User', default: null },
