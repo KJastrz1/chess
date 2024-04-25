@@ -1,7 +1,7 @@
-import { IGame, ILoginUser, INewUser } from "@chess/types";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
+import { ILoginUser, INewUser } from '@/types';
 
-const API_URL = "http://localhost:3000/api/v1";
+const API_URL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
 
 // ============================================================
@@ -26,7 +26,6 @@ export async function signInAccount(user: ILoginUser) {
 }
 
 export async function getCurrentUser() {
-
     try {
         const response = await axios.get(`${API_URL}/users/get-current-user`);
         return response.data;

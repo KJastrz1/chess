@@ -71,15 +71,17 @@ export type INewUser = {
 //================================================
 export type IGame = {
     _id: string;
-    player1: IUser;    
-    player2: IUser;
-    status: string;
-    whosMove: string;
+    player1: string;
+    player2: string;
     board: ChessSquare[][];
-    winner: string;
-    moveTime: number;
     whitePlayer: string;
+    whosMove: string;
+    moveTime: number;
     moves: IMove[];
+    status: GameStatus;
+    player1Connected: boolean;
+    player2Connected: boolean;
+    winner: string | 'draw' | null;
 };
 
 export type IMove = {

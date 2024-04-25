@@ -11,10 +11,13 @@ export interface IGameModel extends Document {
     moveTime: number;
     moves: IMove[];
     status: GameStatus;
+    player1Connected: boolean;
+    player2Connected: boolean;
     winner: Types.ObjectId | 'draw' | null;
     createdAt: Date;
     updatedAt: Date;
 }
+
 const gameSchema = new Schema<IGameModel>({
     player1: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     player2: { type: Schema.Types.ObjectId, ref: 'User', default: null },
@@ -31,7 +34,7 @@ const gameSchema = new Schema<IGameModel>({
         srcCol: { type: Number },
         destRow: { type: Number },
         destCol: { type: Number },
-        piece: { type: String },
+        figure: { type: String },
     }],
     status: { type: String, required: true, default: 'waiting' },
     winner: { type: Schema.Types.ObjectId, default: null },

@@ -7,6 +7,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { isMovePossible } from './utils/chessLogic';
 
 const gamesState: Record<string, IGameModel> = {};
+const disconnectionTimers: Record<string, NodeJS.Timeout> = {};
 
 interface SocketData {
     user: IUserModel | null;
@@ -26,7 +27,7 @@ export default (io: SocketIOServer) => {
                 if (!socket.data.user) {
                     next(new Error('User not found'));
                 }
-                console.log('token poprawny');
+                // console.log('token poprawny');
                 next();
             } catch (error) {
                 console.error(error);
@@ -41,17 +42,26 @@ export default (io: SocketIOServer) => {
 
 
         socket.on('joinGame', async (gameId: string, cb: (message: string) => void) => {
-
             try {
-                console.log('user o id:', socket.data.user._id, " dolaczyl do gry o id: ", gameId);
-                const game: IGameModel | null = await Game.findOne({ _id: gameId });
+                const playerId = socket.data.user._id.toString();
+                if (disconnectionTimers[playerId]) {
+                    clearTimeout(disconnectionTimers[playerId]);
+                    delete disconnectionTimers[playerId];
+                }
+                console.log('user o id:',playerId, " dolaczyl do gry o id: ", gameId);
+                let game: IGameModel | null;
+                if (gamesState[gameId]) {
+                    game = gamesState[gameId];
+                } else {
+                    game = await Game.findOne({ _id: gameId });
+                }
                 // console.log('game:player2', game?.player2);                
                 if (!game) {
                     console.log('Gra nie znaleziona');
                     cb('Game not found');
                     return;
                 }
-                if (game.player1.toString() !== socket.data.user._id.toString()
+                if (game.player1.toString() !== playerId
                     && game.player2 === null) {
                     game.player2 = socket.data.user._id;
                     game.status = 'in_progress';
@@ -65,18 +75,29 @@ export default (io: SocketIOServer) => {
                     console.log('Gracz wykonujacy ruch:', game.whosMove);
                 }
 
-                if (game.player1.toString() !== socket.data.user._id.toString()
-                    && game.player2.toString() !== socket.data.user._id.toString()) {
+                if (game.player1.toString() !== playerId
+                    && game.player2.toString() !== playerId) {
                     console.log('Gracz nie należy do gry');
                     cb('Player not assigned to this game');
                     return;
+                }               
+                if (game.player1.toString() === playerId) {
+                    game.player1Connected = true;
+                }
+                if (game.player2 !== null && game.player2.toString() === playerId) {
+                    game.player2Connected = true;
                 }
 
                 gamesState[gameId] = game;
 
                 socket.data.gameId = gameId;
                 socket.join(gameId);
-                io.to(gameId).emit('receiveGame', game);
+                const gameToSend = {
+                    ...game.toObject(), 
+                    player1Connected: game.player1Connected,
+                    player2Connected: game.player2Connected
+                };
+                io.to(gameId).emit('receiveGame', gameToSend);             
             } catch (error) {
                 console.error('Błąd podczas dołączania do gry:', error);
                 cb('Error joining the game');
@@ -84,7 +105,7 @@ export default (io: SocketIOServer) => {
         });
 
         socket.on('sendMove', async (move: IMove, gameId: string, cb: (message: string) => void) => {
-            console.log('Ruch :', move);
+            console.log("ruch od gracza", socket.data.user._id)
             const game: IGameModel | null = gamesState[gameId];
             if (!game) {
                 console.log('Gra nie znaleziona');
@@ -105,8 +126,6 @@ export default (io: SocketIOServer) => {
 
             const player = game.whitePlayer.toString() === socket.data.user._id.toString() ? 'White' : 'Black';
 
-            
-
             if (!isMovePossible(game.board, move, player)) {
                 console.log('Ruch niemożliwy');
                 cb('Invalid move');
@@ -115,27 +134,42 @@ export default (io: SocketIOServer) => {
             game.board[move.destRow][move.destCol] = game.board[move.srcRow][move.srcCol];
             game.board[move.srcRow][move.srcCol] = 'None';
             game.moves.push(move);
-
-            game.whosMove = game.whosMove === game.player1 ? game.player2 : game.player1;
-
-            socket.to(gameId).emit('receiveMove', move);
+            console.log('otrzymano ruch teraz kolej:', game.whosMove);
+            game.whosMove = game.whosMove.toString() === game.player1.toString() ? game.player2 : game.player1;
+            console.log('otrzymano ruch teraz kolej:', game.whosMove);
+            gamesState[gameId] = game;
+            const gameToSend = {
+                ...game.toObject(), 
+                player1Connected: game.player1Connected,
+                player2Connected: game.player2Connected
+            };
+            socket.to(gameId).emit('receiveMove', gameToSend);
         })
 
         socket.on('disconnect', async (reason) => {
             console.log(`User rozłączony: ${socket.data.user._id}, Powód: ${reason}`);
 
-            const gameId = socket.data.gameId;
-            socket.to(gameId).emit('playerLeft');
+            const gameId = socket.data.gameId;          
             if (gameId && gamesState[gameId]) {
-                const gameToUpdate = gamesState[gameId];
-
-
-                try {
-                    const game = await Game.findByIdAndUpdate(gameId, gameToUpdate);
+                const game = gamesState[gameId];
+                const playerId = socket.data.user._id.toString();                
+        
+                disconnectionTimers[playerId] = setTimeout(async () => {
+                    socket.to(gameId).emit('playerLeft');
+                    
+                    if (playerId === game.player1.toString()) {
+                        game.player1Connected = false;
+                    } else if (playerId === game.player2.toString()) {
+                        game.player2Connected = false;
+                    }
+                    try {
+                        await Game.findByIdAndUpdate(gameId, game);
+                        console.log(`Gra ${gameId} zaktualizowana po rozłączeniu klienta.`);
+                    } catch (error) {
+                        console.error(`Błąd podczas aktualizacji gry ${gameId}:`, error);
+                    }
                     console.log(`Gra ${gameId} zaktualizowana po rozłączeniu klienta.`);
-                } catch (error) {
-                    console.error(`Błąd podczas aktualizacji gry ${gameId}:`, error);
-                }
+                }, 10000);              
             }
         });
     })

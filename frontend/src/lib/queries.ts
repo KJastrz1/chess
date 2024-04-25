@@ -42,6 +42,9 @@ export const useGetWebSocketToken = () => {
     return useQuery({
         queryKey: [QUERY_KEYS.GET_WEBSOCKET_TOKEN],
         queryFn: () => getWebSocketToken(),
+        refetchOnWindowFocus: false,
+        staleTime: 1000 * 60 * 60 * 24 * 7,
+        cacheTime: 1000 * 60 * 60 * 24 * 7,
         onError: (error: Error) => {
             toast.error(error.message);
         },
@@ -77,7 +80,7 @@ export const useGetGames = () => {
     return useQuery({
         queryKey: [QUERY_KEYS.GET_GAMES],
         queryFn: () => getGames(),
-        onError: (error: Error) => {           
+        onError: (error: Error) => {
             toast.error(error.message);
         },
     });
@@ -93,11 +96,11 @@ export const useGetGameById = (gameId: string) => {
             toast.error(error.message);
             return;
         },
-        retry: (failureCount, error) => {         
+        retry: (failureCount, error) => {
             if (error instanceof Error && error.message !== 'Game not found' && error.message !== 'Invalid game ID format') {
-                return true; 
+                return true;
             }
-            return false; 
+            return false;
         },
     });
 }
