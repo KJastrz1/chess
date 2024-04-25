@@ -9,7 +9,7 @@ import Square from '@/shared/Square';
 import { useUserContext } from '@/context/AuthContext';
 
 
-const SOCKET_SERVER_URL = "http://localhost:3000";
+const SOCKET_SERVER_URL = import.meta.env.VITE_SOCKET_URL;
 let socket: Socket;
 
 function Board() {
@@ -58,12 +58,13 @@ function Board() {
       });
 
       socket.on('receiveGame', (receivedGame: IGame) => {
-        // console.log('Otrzymano aktualizację gry:', receivedGame);
+        console.log('Otrzymano aktualizację gry:', receivedGame);
         if (!receivedGame) return;
         setGame(receivedGame);
         setIsPlayerTurn(receivedGame.whosMove === user._id);
         setIsWhitePlayer(receivedGame.whitePlayer === user._id);
         setIsLoadingGameFromSocket(false);
+        setOpponentLeft(false);
       });
 
       socket.on("receiveMove", (game: IGame) => {
@@ -79,15 +80,12 @@ function Board() {
     }
   }, [token]);
 
-  // useEffect(() => {
-  //   console.log("gameState changed:", gameState);
-  // }, [gameState]);
-
   useEffect(() => {
     return () => {
       if (socket) {
         console.log('disconnecting socket.io');
         socket.disconnect();
+        socket=null;
       }
     };
   }, []);
@@ -179,8 +177,8 @@ function Board() {
       {game?.status !== 'waiting' && <div className="flex flex-col justify-center self-start md:p-5">
         {!game.player1Connected && <div className="text-orange-400">Player 1 is not connected.</div>}
         {!game.player2Connected && <div className="text-orange-400">Player 2 is not connected.</div>}
-        {isWhitePlayer && <div className="text-xl font-semibold">You are white</div>}
-        {!isWhitePlayer && <div className="text-xl font-semibold">You are black</div>}
+        {isWhitePlayer && <div className="text-xl font-semibold">You are playing white</div>}
+        {!isWhitePlayer && <div className="text-xl font-semibold">You are playing black</div>}
         {isPlayerTurn && <div className="text-xl font-semibold text-green-500">Your turn</div>}
         {!isPlayerTurn && <div className="text-xl font-semibold text-orange-400">Opponent's turn</div>}
         <div className="text-xl font-semibold">Moves:</div>

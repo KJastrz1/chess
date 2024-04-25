@@ -1,7 +1,7 @@
-import { IGame, ILoginUser, INewUser } from "@chess/types";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
+import { ILoginUser, INewUser } from '@/types';
 
-const API_URL = "http://localhost:3000/api/v1";
+const API_URL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
 
 // ============================================================

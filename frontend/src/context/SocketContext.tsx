@@ -1,3 +1,4 @@
+import { useGetWebSocketToken } from "@/lib/queries";
 import { createContext, useContext, useEffect, ReactNode } from "react";
 import io, { Socket } from "socket.io-client";
 
@@ -9,29 +10,32 @@ export const useSocket = () => useContext(SocketContext);
 interface SocketProviderProps {
   children: ReactNode;
 }
+const SOCKET_SERVER_URL = import.meta.env.VITE_API_URL;
 
 export const SocketProvider = ({ children }: SocketProviderProps) => {
+  const { data: token, isLoading: isLoadingToken, error: errorToken } = useGetWebSocketToken();
 
-  const socket: Socket = io("http://localhost:3000");
+  let socket: Socket;
 
   useEffect(() => {
-    socket.on("connect", () => {
-      console.log("connected to server", socket.id);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("disconnected from server");
-    });
-
-    socket.on("error", (error) => {
-      console.log(error);
-    });
+    if (!socket && token) {
+      console.log('Tworzenie socket.io');
+      socket = io(SOCKET_SERVER_URL, {
+        auth: {
+          token
+        }
+      });
+    }
 
 
+  }, [token]);
+
+  useEffect(() => {
     return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("error");
+      if (socket) {
+        console.log('disconnecting socket.io');
+        socket.disconnect();
+      }
     };
   }, []);
 
