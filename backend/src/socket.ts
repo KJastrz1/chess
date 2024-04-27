@@ -2,7 +2,7 @@
 import jwt from 'jsonwebtoken';
 import { Game, IGameModel } from './models/Game';
 import { IUserModel, User } from './models/User';
-import { IMove } from './types';
+import { GameStatus, IMove } from './types';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { isMovePossible } from './utils/chessLogic';
 
@@ -12,6 +12,7 @@ const disconnectionTimers: Record<string, NodeJS.Timeout> = {};
 interface SocketData {
     user: IUserModel | null;
 }
+
 
 export default (io: SocketIOServer) => {
     io.use(async (socket: Socket, next: any) => {
@@ -39,8 +40,6 @@ export default (io: SocketIOServer) => {
     });
 
     io.on('connection', (socket: Socket) => {
-
-
         socket.on('joinGame', async (gameId: string, cb: (message: string) => void) => {
             try {
                 const playerId = socket.data.user._id.toString();
@@ -48,7 +47,7 @@ export default (io: SocketIOServer) => {
                     clearTimeout(disconnectionTimers[playerId]);
                     delete disconnectionTimers[playerId];
                 }
-                console.log('user o id:',playerId, " dolaczyl do gry o id: ", gameId);
+                console.log('user o id:', playerId, " dolaczyl do gry o id: ", gameId);
                 let game: IGameModel | null;
                 if (gamesState[gameId]) {
                     game = gamesState[gameId];
@@ -62,29 +61,29 @@ export default (io: SocketIOServer) => {
                     return;
                 }
                 if (game.player1.toString() !== playerId
-                    && game.player2 === null) {
+                    && game.status === GameStatus.WaitingForPlayer2) {
                     game.player2 = socket.data.user._id;
-                    game.status = 'in_progress';
                     console.log('Gracz dolaczyl do gry jako drugi');
-
                     const players = [game.player1, game.player2];
                     const whitePlayerIndex = Math.floor(Math.random() * players.length);
                     game.whitePlayer = players[whitePlayerIndex];
                     game.whosMove = game.whitePlayer;
+                    game.status = GameStatus.WaitingForStart;
                     console.log('Gracz bialy:', game.whitePlayer);
                     console.log('Gracz wykonujacy ruch:', game.whosMove);
                 }
 
                 if (game.player1.toString() !== playerId
-                    && game.player2.toString() !== playerId) {
+                    && game.player2 && game.player2.toString() !== playerId) {
                     console.log('Gracz nie należy do gry');
                     cb('Player not assigned to this game');
                     return;
-                }               
+                }
+            
                 if (game.player1.toString() === playerId) {
                     game.player1Connected = true;
                 }
-                if (game.player2 !== null && game.player2.toString() === playerId) {
+                if (game.status !== GameStatus.WaitingForPlayer2 && game.player2.toString() === playerId) {
                     game.player2Connected = true;
                 }
 
@@ -93,11 +92,11 @@ export default (io: SocketIOServer) => {
                 socket.data.gameId = gameId;
                 socket.join(gameId);
                 const gameToSend = {
-                    ...game.toObject(), 
+                    ...game.toObject(),
                     player1Connected: game.player1Connected,
                     player2Connected: game.player2Connected
                 };
-                io.to(gameId).emit('receiveGame', gameToSend);             
+                io.to(gameId).emit('receiveGame', gameToSend);
             } catch (error) {
                 console.error('Błąd podczas dołączania do gry:', error);
                 cb('Error joining the game');
@@ -105,6 +104,7 @@ export default (io: SocketIOServer) => {
         });
 
         socket.on('sendMove', async (move: IMove, gameId: string, cb: (message: string) => void) => {
+            const playerId = socket.data.user._id.toString();
             console.log("ruch od gracza", socket.data.user._id)
             const game: IGameModel | null = gamesState[gameId];
             if (!game) {
@@ -112,8 +112,8 @@ export default (io: SocketIOServer) => {
                 cb('Game not found');
                 return;
             }
-            if (game.player1.toString() !== socket.data.user._id.toString()
-                && game.player2.toString() !== socket.data.user._id.toString()) {
+            if (game.player1.toString() !== playerId
+                && game.player2.toString() !== playerId) {
                 console.log('Gracz nie należy do gry');
                 cb('Player not assigned to this game');
                 return;
@@ -134,44 +134,106 @@ export default (io: SocketIOServer) => {
             game.board[move.destRow][move.destCol] = game.board[move.srcRow][move.srcCol];
             game.board[move.srcRow][move.srcCol] = 'None';
             game.moves.push(move);
-            console.log('otrzymano ruch teraz kolej:', game.whosMove);
+
             game.whosMove = game.whosMove.toString() === game.player1.toString() ? game.player2 : game.player1;
-            console.log('otrzymano ruch teraz kolej:', game.whosMove);
+
             gamesState[gameId] = game;
             const gameToSend = {
-                ...game.toObject(), 
+                ...game.toObject(),
                 player1Connected: game.player1Connected,
                 player2Connected: game.player2Connected
             };
-            socket.to(gameId).emit('receiveMove', gameToSend);
+            clearMoveTimer(gameId);
+            startMoveTimer(gameId, game.moveTime);
+            socket.to(gameId).emit('receiveGame', gameToSend);
         })
+
+        socket.on('changeMoveTime', async (moveTime: number, cb: (message: string) => void) => {
+            const gameId = socket.data.gameId;
+            const game = gamesState[gameId];
+            if (game.status !== GameStatus.WaitingForPlayer2 && game.status !== GameStatus.WaitingForStart) {
+                cb('You can only change time limit before game started');
+                return;
+            }
+            if (game) {
+                if (moveTime < 10) {
+                    moveTime = 10;
+                }
+                if (moveTime > 300) {
+                    moveTime = 300;
+                }
+                game.moveTime = moveTime;   
+                cb("Time limit set to " + moveTime + " seconds")             
+                socket.to(gameId).emit('receiveGame', game);
+                await Game.findByIdAndUpdate(gameId, game);
+            }
+        })
+
+        socket.on('startGame', async () => {
+            const gameId = socket.data.gameId;
+            const game = gamesState[gameId];
+            if (game) {
+                game.status = GameStatus.InProgress;
+                io.to(gameId).emit('receiveGame', game);
+                startMoveTimer(gameId, game.moveTime);
+            }
+        });
 
         socket.on('disconnect', async (reason) => {
             console.log(`User rozłączony: ${socket.data.user._id}, Powód: ${reason}`);
 
-            const gameId = socket.data.gameId;          
+            const gameId = socket.data.gameId;
             if (gameId && gamesState[gameId]) {
                 const game = gamesState[gameId];
-                const playerId = socket.data.user._id.toString();                
-        
+                const playerId = socket.data.user._id.toString();
+                if (game.status === GameStatus.WaitingForStart && playerId === game.player2.toString()) {
+                    game.status = GameStatus.WaitingForPlayer2;
+                    game.player2Connected = false;
+                    socket.to(gameId).emit('receiveGame', game);
+                }
+                if ((game.status === GameStatus.WaitingForPlayer2 || game.status === GameStatus.WaitingForStart) && playerId === game.player1.toString()) {
+                    delete gamesState[gameId];
+                    await Game.findByIdAndDelete(gameId);
+                }
                 disconnectionTimers[playerId] = setTimeout(async () => {
                     socket.to(gameId).emit('playerLeft');
-                    
-                    if (playerId === game.player1.toString()) {
-                        game.player1Connected = false;
-                    } else if (playerId === game.player2.toString()) {
-                        game.player2Connected = false;
-                    }
+
+                    game.winner = game.player1.toString() === playerId ? game.player2 : game.player1;
+                    game.status = GameStatus.Finished;
                     try {
                         await Game.findByIdAndUpdate(gameId, game);
                         console.log(`Gra ${gameId} zaktualizowana po rozłączeniu klienta.`);
                     } catch (error) {
                         console.error(`Błąd podczas aktualizacji gry ${gameId}:`, error);
                     }
+                    clearMoveTimer(gameId);
                     console.log(`Gra ${gameId} zaktualizowana po rozłączeniu klienta.`);
-                }, 10000);              
+                }, 30000);
             }
         });
+
+        const startMoveTimer = (gameId: string, moveTime: number) => {
+            const timeoutId = setTimeout(() => {
+                const game = gamesState[gameId];
+                if (game) {
+                    game.whosMove = game.whosMove.toString() === game.player1.toString() ? game.player2 : game.player1;
+                    console.log(`Czas na ruch minął, teraz kolej na: ${game.whosMove}`);
+
+                    io.to(gameId).emit('timeOut', { newTurn: game.whosMove });
+                }
+            }, moveTime * 1000);
+
+
+            gamesState[gameId].timer = timeoutId;
+        };
+
+        const clearMoveTimer = (gameId: string) => {
+            const game = gamesState[gameId];
+            if (game && game.timer) {
+                clearTimeout(game.timer);
+                game.timer = null;
+            }
+        };
     })
 
 }

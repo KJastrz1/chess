@@ -7,8 +7,8 @@ import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
 import LoadingButton from "@/components/Ui/LoadingButton";
-import { IGame, IGameListItem } from "@/types";
-import { UseQueryResult } from "react-query";
+import { IGameListItem } from "@/types";
+
 
 const Home = () => {
     
@@ -22,8 +22,7 @@ const Home = () => {
     const { data: games, isLoading: isLoadingGames } = useSearchGames(debouncedSearch);
 
     const handleCreate = async () => {
-        const data = await createGame();
-        console.log(data);
+        const data = await createGame();     
         if (!data) {
             return;
         }

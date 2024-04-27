@@ -101,4 +101,9 @@ export type IGameListItem = {
     moveTime?: number;
 };
 
-export type GameStatus = 'waiting' | 'in_progress' | 'finished';
+export enum GameStatus {
+    WaitingForPlayer2 = 'waiting_for_player2',
+    WaitingForStart = 'waiting',
+    InProgress = 'in_progress',
+    Finished = 'finished'
+}
