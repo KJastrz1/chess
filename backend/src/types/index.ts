@@ -98,12 +98,12 @@ export type IGameListItem = {
         _id: string;
         username: string;
     };
-    moveTime?: number;
+    moveTime: number;
 };
 
 export enum GameStatus {
     WaitingForPlayer2 = 'waiting_for_player2',
-    WaitingForStart = 'waiting',
+    WaitingForStart = 'waiting_for_start',
     InProgress = 'in_progress',
     Finished = 'finished'
 }

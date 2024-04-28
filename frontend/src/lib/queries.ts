@@ -65,10 +65,10 @@ export const useCreateGame = () => {
     });
 }
 
-export const useSearchGames = (searchTerm: string) => {
+export const useSearchGames = (player1Username: string) => {
     return useQuery({
-        queryKey: [QUERY_KEYS.SEARCH_GAMES, searchTerm],
-        queryFn: () => searchGames(searchTerm),
+        queryKey: [QUERY_KEYS.SEARCH_GAMES, player1Username],
+        queryFn: () => searchGames(player1Username),
         onError: (error: Error) => {
             toast.error(error.message);
         },

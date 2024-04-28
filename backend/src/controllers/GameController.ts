@@ -4,6 +4,7 @@ import { User } from '../models/User';
 import { Game } from '../models/Game';
 import { IGame } from '../types/index';
 import { AuthenticatedRequest } from '@src/types/express';
+import { buildQuery } from '@src/utils/utils';
 
 export const createGame = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
@@ -20,32 +21,27 @@ export const createGame = async (req: AuthenticatedRequest, res: Response): Prom
 
 export interface GetAllGamesRequest extends AuthenticatedRequest {
     query: {
-        searchTerm?: string;
+        player1?: string;
+        player2?: string;
+        status?: string;
+        moveTime?: string;
+        winner?: string;
+        player1Username?: string;
     };
 }
+
 export const getAllGames = async (req: GetAllGamesRequest, res: Response): Promise<void> => {
+    console.log("query", req.query);
     try {
-        let games;
+        const query = buildQuery(req.query, Game.schema.paths);
 
-        if (req.query.searchTerm) {
-
-            const users = await User.find({
-                username: { $regex: req.query.searchTerm, $options: "i" }
-            }).select('_id');
-
-            const userIds = users.map(user => user._id);
-
-            games = await Game.find({
-                player1: { $in: userIds }
-            }).select('player1 moveTime')
-                .populate('player1', 'username');
-        } else {
-            games = await Game.find()
-                .select('player1 moveTime')
-                .populate('player1', 'username');
-        }
+        const games = await Game.find(query)
+            .populate('player1', 'username')
+            .populate('player2', 'username');
+        console.log("games", games.length);
         res.json(games);
-    } catch (err: any) {
+    } catch (err) {
+        console.error(err);
         res.status(500).send('Server Error');
     }
 };

@@ -16,14 +16,83 @@ export default router;
 
 /**
  * @swagger
+ * components:
+ *   schemas:
+ *     Game:
+ *       type: object
+ *       required:
+ *         - player1
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: The auto-generated id of the game
+ *         player1:
+ *           type: string
+ *           description: Reference to the first player's user ID
+ *         player2:
+ *           type: string
+ *           description: Reference to the second player's user ID
+ *         board:
+ *           type: array
+ *           items:
+ *             type: array
+ *             items:
+ *               type: string
+ *           description: The board state
+ *         whitePlayer:
+ *           type: string
+ *           description: The ID of the player playing white
+ *         whosMove:
+ *           type: string
+ *           description: The ID of the player whose turn it is
+ *         moveTime:
+ *           type: number
+ *           description: The time per move in seconds
+ *         moves:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Move'
+ *         status:
+ *           type: string
+ *           description: The current status of the game
+ *         winner:
+ *           type: string
+ *           nullable: true
+ *           description: The ID of the winner, or null if the game is ongoing
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: The date when the game was created
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: The date when the game was last updated
+ *     Move:
+ *       type: object
+ *       properties:
+ *         srcRow:
+ *           type: number
+ *           description: Source row for the move
+ *         srcCol:
+ *           type: number
+ *           description: Source column for the move
+ *         destRow:
+ *           type: number
+ *           description: Destination row for the move
+ *         destCol:
+ *           type: number
+ *           description: Destination column for the move
+ *         figure:
+ *           type: string
+ *           description: The chess piece moved
  * tags:
- *   name: Games
- *   description: Game management
+ *   - name: Games
+ *     description: The games managing API
  */
 
 /**
  * @swagger
- * /api/v1/games:
+ * /games:
  *   post:
  *     summary: Create a new game
  *     tags: [Games]
@@ -35,7 +104,10 @@ export default router;
  *             type: object
  *             required:
  *               - player1
- *               - player2             
+ *             properties:
+ *               player1:
+ *                 type: string
+ *                 description: The ID of the user creating the game
  *     responses:
  *       201:
  *         description: The game was successfully created
@@ -43,16 +115,42 @@ export default router;
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Game'
- *       500:
- *         description: Some server error
+ *       400:
+ *         description: Bad request
  */
 
 /**
  * @swagger
- * /api/v1/games:
+ * /games:
  *   get:
- *     summary: Retrieve a list of games
+ *     summary: Get all games
  *     tags: [Games]
+ *     parameters:
+ *       - in: query
+ *         name: player1
+ *         schema:
+ *           type: string
+ *         description: Player 1 ID to filter by
+ *       - in: query
+ *         name: player2
+ *         schema:
+ *           type: string
+ *         description: Player 2 ID to filter by
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Game status to filter by
+ *       - in: query
+ *         name: moveTime
+ *         schema:
+ *           type: number
+ *         description: Move time to filter by
+ *       - in: query
+ *         name: winner
+ *         schema:
+ *           type: string
+ *         description: Winner ID to filter by
  *     responses:
  *       200:
  *         description: A list of games
@@ -62,37 +160,41 @@ export default router;
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Game'
+ *       500:
+ *         description: Server error
  */
 
 /**
  * @swagger
- * /api/v1/games/{id}:
+ * /games/{id}:
  *   get:
  *     summary: Get a game by ID
  *     tags: [Games]
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: The game id
+ *         description: The game ID
  *     responses:
  *       200:
- *         description: Game data for the specified ID
+ *         description: The found game
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Game'
  *       404:
  *         description: Game not found
+ *       400:
+ *         description: Invalid ID supplied
  */
 
 /**
  * @swagger
- * /api/v1/games/{id}:
+ * /games/{id}:
  *   put:
- *     summary: Update a game by ID
+ *     summary: Update a game
  *     tags: [Games]
  *     parameters:
  *       - in: path
@@ -100,7 +202,7 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: The game id
+ *         description: The game ID
  *     requestBody:
  *       required: true
  *       content:
@@ -109,20 +211,22 @@ export default router;
  *             $ref: '#/components/schemas/Game'
  *     responses:
  *       200:
- *         description: The game was updated
+ *         description: The updated game
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Game'
  *       404:
  *         description: Game not found
+ *       400:
+ *         description: Invalid request
  */
 
 /**
  * @swagger
- * /api/v1/games/{id}:
+ * /games/{id}:
  *   delete:
- *     summary: Delete a game by ID
+ *     summary: Delete a game
  *     tags: [Games]
  *     parameters:
  *       - in: path
@@ -130,51 +234,12 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: The game id
+ *         description: The game ID
  *     responses:
  *       204:
  *         description: The game was deleted
  *       404:
  *         description: Game not found
- */
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     Game:
- *       type: object
- *       required:
- *         - player1
- *         - player2
- *       properties:
- *         player1:
- *           type: string
- *         player2:
- *           type: string
- *         status:
- *           type: string
- *           enum: [waiting, in_progress, finished]
- *         winner:
- *           type: string
- *         board:
- *           type: array
- *           items:
- *             type: string
- *         moves:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               from:
- *                 type: string
- *               to:
- *                 type: string
- *       example:
- *         player1: Alice
- *         player2: Bob
- *         status: in_progress
- *         winner: null
- *         board: ['E2', 'E4', '...']
- *         moves: [{ from: 'E2', to: 'E4' }]
+ *       500:
+ *         description: Server error
  */

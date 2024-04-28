@@ -4,8 +4,7 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 export interface IGameModel extends Document {
     _id: Types.ObjectId;
     player1: Types.ObjectId;
-    player2: Types.ObjectId;
-    board: ChessSquare[][];
+    player2: Types.ObjectId;    
     whitePlayer: Types.ObjectId;
     whosMove: Types.ObjectId;
     moveTime: number;
@@ -17,16 +16,12 @@ export interface IGameModel extends Document {
     winner: Types.ObjectId | 'draw' | null;
     createdAt: Date;
     updatedAt: Date;
+    board: ChessSquare[][];
 }
 
 const gameSchema = new Schema<IGameModel>({
     player1: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    player2: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    board: {
-        type: [[String]],
-        required: true,
-        default: initialBoard
-    },
+    player2: { type: Schema.Types.ObjectId, ref: 'User', default: null },    
     whitePlayer: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     whosMove: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     moveTime: { type: Number, default: 180, required: true },
@@ -40,7 +35,12 @@ const gameSchema = new Schema<IGameModel>({
     status: { type: String, required: true, enum: Object.values(GameStatus), default: GameStatus.WaitingForPlayer2 },
     winner: { type: Schema.Types.ObjectId, default: null },
     createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: { type: Date, default: Date.now },
+    board: {
+        type: [[String]],
+        required: true,
+        default: initialBoard
+    },
 });
 
 gameSchema.pre<IGameModel>('save', function (next: any) {

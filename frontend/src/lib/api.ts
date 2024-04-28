@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ILoginUser, INewUser } from '@/types';
+import { GameStatus, ILoginUser, INewUser } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
@@ -79,11 +79,12 @@ export async function getGames() {
     }
 }
 
-export async function searchGames(searchTerm: string) {
+export async function searchGames(player1Username: string) {
     try {
         const response = await axios.get(`${API_URL}/games`, {
             params: {
-                searchTerm,
+                player1Username,
+                status: GameStatus.WaitingForPlayer2,
             },
         });
         return response.data;

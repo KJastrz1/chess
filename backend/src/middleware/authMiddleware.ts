@@ -5,18 +5,21 @@ import jwt from 'jsonwebtoken';
 
 
 
-export const protect = async (req: any, res: Response, next: NextFunction) => {
+export const protect: RequestHandler = async (req: any, res: Response, next: NextFunction) => {
   let token;
   if (req.cookies && req.cookies['jwtToken']) {
     try {
       token = req.cookies['jwtToken'];
-
+      
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as jwt.JwtPayload;
 
-      req.user = await User.findById(decoded._id);
-      if (!req.user) {
+      const authReq = req as AuthenticatedRequest;
+      const user = await User.findById(decoded._id);
+      if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
+      authReq.user = user;
+      // authReq.headers.authorization = `Bearer ${token}`;
       next();
     } catch (error) {
       console.error(error);
