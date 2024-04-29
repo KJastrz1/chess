@@ -1,50 +1,62 @@
-import { GetAllGamesRequest } from '@src/controllers/GameController';
 import { User } from '@src/models/User';
+import { IGameParams } from '@src/types';
 import mongoose from 'mongoose';
 
-interface QueryParams {
-    [key: string]: string;
-}
-
-interface SchemaPath {
-    [key: string]: {
-        instance: string,
-        options?: any
-    };
-}
-
-
-export async function buildQuery(params: QueryParams, schemaPaths: SchemaPath, requestingUserElo?: number) {
+export async function buildGamesQuery(params: IGameParams, schemaPaths: any, requestingUserElo?: number) {
+    console.log("params", params)
     const query: { [key: string]: any } = {};
-    const eloRange = 50; 
-   
+    const eloRange = 100;
+
     if (requestingUserElo) {
-        const users = await User.find({
+        const eloUsers = await User.find({
             eloRating: { $gte: requestingUserElo - eloRange, $lte: requestingUserElo + eloRange }
         }).select('_id');
-        const userIds = users.map(user => user._id);
-        query['$or'] = [{ player1: { $in: userIds } }, { player2: { $in: userIds } }];
+        const eloUserIds = eloUsers.map(user => user._id.toString());
+
+        if (params.player1Username) {
+            const nameUsers = await User.find({ username: { $regex: new RegExp(params.player1Username, 'i') } }).select('_id');
+            const nameUserIds = nameUsers.map(user => user._id.toString());
+            const combinedUserIds = eloUserIds.filter(id => nameUserIds.includes(id));
+            query['player1'] = { $in: combinedUserIds };
+        } else {
+            query['player1'] = { $in: eloUserIds };
+
+        }
+    } else if (params.player1Username) {
+        const users = await User.find({ username: { $regex: new RegExp(params.player1Username, 'i') } }).select('_id');
+        const userIds = users.map(user => user._id.toString());
+        query['player1'] = { $in: userIds };
     }
 
-    for (const key of Object.keys(params)) {
+
+    for (const key of Object.keys(params) as (keyof IGameParams)[]) {
         const value = params[key];
-        if (schemaPaths[key] && value !== undefined) {
+        if (value !== undefined && key !== 'player1Username' && schemaPaths[key]) {
             const schemaType = schemaPaths[key].instance;
-            if (schemaType === 'ObjectID' && mongoose.Types.ObjectId.isValid(value)) {
-                query[key] = new mongoose.Types.ObjectId(value);
-            } else if (schemaType === 'Number') {
-                const number = parseInt(value, 10);
-                if (!isNaN(number)) {
-                    query[key] = number;
-                }
-            } else if (schemaType === 'String') {
-                query[key] = { $regex: value, $options: 'i' };
-            } else {
-                query[key] = value;
+            switch (schemaType) {
+                case 'ObjectID':
+                    if (mongoose.Types.ObjectId.isValid(value)) {
+                        query[key] = new mongoose.Types.ObjectId(value);
+                    }
+                    break;
+                case 'Number':
+                    const number = parseInt(value, 10);
+                    if (!isNaN(number)) {
+                        query[key] = number;
+                    }
+                    break;
+                case 'String':
+                    query[key] = { $regex: new RegExp(value, 'i') };
+                    break;
+                default:
+                    query[key] = value;
             }
         }
     }
+    console.log("Final MongoDB Query:", query);
 
     return query;
 }
+
+
 

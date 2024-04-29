@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "react-query";
 import { QUERY_KEYS } from "./keyQuery";
-import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, getWebSocketToken, searchGames, signInAccount } from "./api";
-import { ILoginUser, INewUser } from "@/types";
+import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, getWebSocketToken, getPendingGames, signInAccount } from "./api";
+import { IGameParams, ILoginUser, INewUser } from "@/types";
 import { toast } from "react-toastify";
 
 
@@ -57,35 +57,21 @@ export const useGetWebSocketToken = () => {
 // ============================================================
 export const useCreateGame = () => {
     return useMutation(createGame, {
-        onSuccess: (data) => {
-        },
         onError: (error: Error) => {
             toast.error(error.message);
         },
     });
 }
 
-export const useSearchGames = (player1Username: string) => {
+export const useGetGames = (params: IGameParams) => {
     return useQuery({
-        queryKey: [QUERY_KEYS.SEARCH_GAMES, player1Username],
-        queryFn: () => searchGames(player1Username),
-        onError: (error: Error) => {
-            toast.error(error.message);
-        },
-
-    });
-}
-
-export const useGetGames = () => {
-    return useQuery({
-        queryKey: [QUERY_KEYS.GET_GAMES],
-        queryFn: () => getGames(),
+        queryKey: [QUERY_KEYS.GET_GAMES, params],
+        queryFn: () => getGames(params),
         onError: (error: Error) => {
             toast.error(error.message);
         },
     });
 }
-
 
 export const useGetGameById = (gameId: string) => {
     return useQuery({
@@ -96,7 +82,7 @@ export const useGetGameById = (gameId: string) => {
             toast.error(error.message);
             return;
         },
-        retry: (failureCount, error) => {
+        retry: (error) => {
             if (error instanceof Error && error.message !== 'Game not found' && error.message !== 'Invalid game ID format') {
                 return true;
             }

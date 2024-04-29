@@ -1,9 +1,9 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import { Game } from '@src/models/Game';
-import { IGame } from '@src/types/index';
+import { IGame, IGameParams } from '@src/types/index';
 import { AuthenticatedRequest } from '@src/types/express';
-import { buildQuery } from '@src/utils/utils';
+import { buildGamesQuery } from '@src/utils/utils';
 
 export const createGame = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
@@ -19,24 +19,16 @@ export const createGame = async (req: AuthenticatedRequest, res: Response): Prom
 };
 
 export interface GetAllGamesRequest extends AuthenticatedRequest {
-    query: {
-        player1?: string;
-        player2?: string;
-        status?: string;
-        moveTime?: string;
-        winner?: string;
-        player1Username?: string;
-        eloRange?: string;
-    };
+    query: IGameParams;
 }
 export const getAllGames = async (req: GetAllGamesRequest, res: Response): Promise<void> => {
-    console.log("query", req.query);
+   
     try {
         const userElo = req.user.eloRating;
-        const query = await buildQuery(req.query, Game.schema.paths, userElo);
+        const query = await buildGamesQuery(req.query, Game.schema.paths, userElo);
 
         const games = await Game.find(query)
-            .populate('player1', 'username eloRating') 
+            .populate('player1', 'username eloRating')
             .populate('player2', 'username eloRating');
 
         console.log("games", games.length);

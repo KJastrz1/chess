@@ -1,5 +1,5 @@
 import axios from "axios";
-import { GameStatus, ILoginUser, INewUser } from '@/types';
+import { GameStatus, IGameParams, ILoginUser, INewUser } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
@@ -70,23 +70,9 @@ export async function getGameById(gameId: string) {
     }
 }
 
-export async function getGames() {
+export async function getGames(params: IGameParams) {
     try {
-        const response = await axios.get(`${API_URL}/games`);
-        return response.data;
-    } catch (error) {
-        throw new Error('Failed to fetch games');
-    }
-}
-
-export async function searchGames(player1Username: string) {
-    try {
-        const response = await axios.get(`${API_URL}/games`, {
-            params: {
-                player1Username,
-                status: GameStatus.WaitingForPlayer2,
-            },
-        });
+        const response = await axios.get(`${API_URL}/games`, { params });
         return response.data;
     } catch (error) {
         throw new Error('Failed to fetch games');

@@ -84,6 +84,18 @@ export type IGame = {
     winner: string | 'draw' | null;
 };
 
+export type IGameParams = {
+    player1?: string;
+    player2?: string;
+    status?: string;
+    moveTime?: string;
+    winner?: string;
+    player1Username?: string;
+    player2Username?: string;
+    updatedAt?: string;
+    createdAt?: string;
+};
+
 export type IMove = {
     srcRow: number;
     srcCol: number;
@@ -97,7 +109,9 @@ export type IGameListItem = {
     player1: {
         _id: string;
         username: string;
+        eloRating: number;
     };
+    winner: string | 'draw' | null;
     moveTime: number;
 };
 

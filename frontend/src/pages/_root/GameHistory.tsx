@@ -7,39 +7,18 @@ import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
 import LoadingButton from "@/components/Ui/LoadingButton";
-import { GameStatus, IGameListItem } from "@/types";
+import { IGameListItem } from "@/types";
+import { useUserContext } from "@/context/AuthContext";
 
 
 const Home = () => {
-
-    const [gameId, setGameId] = useState('');
-    const [activeGameId, setActiveGameId] = useState('');
+    const {user}=useUserContext();  
     const navigate = useNavigate();
-    const { mutateAsync: createGame, isLoading: isLoadingCreateGame } = useCreateGame();
-    const { data: game, isLoading: isLoadingGame } = useGetGameById(activeGameId);
-    const [searchValue, setSearchValue] = useState("");
-    const debouncedSearch = useDebounce(searchValue, 750);
-    const { data: games, isLoading: isLoadingGames } = useGetGames({ player1Username: debouncedSearch, status: GameStatus.WaitingForPlayer2 });
+    const [games, setGames] = useState<IGameListItem[] | null>(null);
 
-    const handleCreate = async () => {
-        const data = await createGame();
-        if (!data) {
-            return;
-        }
-        navigate(`/game/${data._id}`);
-    }
 
-    const handleJoin = async () => {
-        setActiveGameId(gameId);
-        if (!game) {
-            return;
-        }
-    }
-    useEffect(() => {
-        if (game) {
-            navigate(`/game/${game._id}`);
-        }
-    }, [game])
+
+ 
 
 
     return (
@@ -66,7 +45,7 @@ const Home = () => {
                                 <LoadingButton />
                             </div>
                         ) : "Join game"}
-                    </Button>
+                    </Button>                    
                 </div>
             </div>
 
@@ -74,7 +53,7 @@ const Home = () => {
                 <div className="flex w-full h-full p-10 justify-center items-center">
                     <Loader />
                 </div>}
-
+          
             {!isLoadingGames && games &&
                 <div className="w-full md:p-10">
                     <div className="grid grid-cols-3 text-lg font-semibold py-4 border-b border-gray-800 dark:border-gray-200">
@@ -93,7 +72,7 @@ const Home = () => {
                                 <Button onClick={() => navigate(`/game/${game._id}`)} >
                                     Join Game
                                 </Button>
-
+                               
                             </span>
                         </div>
                     ))}
