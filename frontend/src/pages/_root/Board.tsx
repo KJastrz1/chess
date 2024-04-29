@@ -114,7 +114,7 @@ function Board() {
     }
   };
 
-  const handleClick = (figure: ChessSquare, row: number, col: number): void => {
+  const handleSqaureClick = (figure: ChessSquare, row: number, col: number): void => {
     if (!isPlayerTurn || game?.status !== GameStatus.InProgress || opponentLeft) {
       return;
     }
@@ -143,24 +143,26 @@ function Board() {
   }
   const renderBoard = (): JSX.Element[][] => {
     return game.board.map((row, rowIndex) =>
-      row.map((cell, colIndex) => (
+      row.map((figure, colIndex) => (
         <Square
           key={`${rowIndex}-${colIndex}`}
-          onClick={() => handleClick(cell, rowIndex, colIndex)}
+          onClick={() => handleSqaureClick(figure, rowIndex, colIndex)}
           isWhite={(rowIndex + colIndex) % 2 === 0}
-          figure={cell}
+          figure={figure}
           highlight={checkIfPossibleMove(possibleMoves, rowIndex, colIndex)}
-          capture={checkCapture(selectedPiece, rowIndex, colIndex, game.board)}
+          capture={checkCapture(possibleMoves, selectedPiece, rowIndex, colIndex, game.board)}
+          row={rowIndex}
+          col={colIndex}
         />
       ))
     );
   };
   return (
-    <div className="flex flex-col md:flex-row justify-start items-center gap-5 h-full w-full py-2 px-2 md:px-4">
+    <div className="flex flex-col md:flex-row justify-start items-center gap-3 h-full w-full py-2 px-2 md:px-4">
       <div className="grid grid-cols-8 gap-0">
         {renderBoard()}
       </div>
-      <div className="flex flex-col justify-center p-5">
+      <div className="flex flex-col justify-center">
         {opponentLeft && (
           <div className="text-xl font-semibold text-red">Opponent has left the game! You won!</div>
         )}

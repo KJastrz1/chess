@@ -151,8 +151,9 @@ export const checkIfPossibleMove = (possibleMoves: { row: number, col: number }[
   return possibleMoves.some(move => move.row === row && move.col === col);
 };
 
-export const checkCapture = (selectedPiece: SelectedPiece | null, row: number, col: number, gameState: ChessSquare[][]): boolean => {
+export const checkCapture = (possibleMoves: { row: number, col: number }[],selectedPiece: SelectedPiece | null, destRow: number, destCol: number, gameState: ChessSquare[][]): boolean => {
   if (!selectedPiece) return false;
-  const target = gameState[row][col];
+  if(!checkIfPossibleMove(possibleMoves, destRow, destCol)) return false;
+  const target = gameState[destRow][destCol];
   return target !== "None" && (Object.values(White).includes(selectedPiece.figure) && Object.values(Black).includes(target) || Object.values(Black).includes(selectedPiece.figure) && Object.values(White).includes(target));
 };

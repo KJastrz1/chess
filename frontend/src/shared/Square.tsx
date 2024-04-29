@@ -20,8 +20,8 @@ const Square = ({ onClick, isWhite = false, figure, highlight, row, col, capture
             <button onClick={handleClick} className="flex justify-center items-center w-full h-full">
                 {capture && (
                     <div className="absolute inset-0 flex justify-center items-center">
-                    <div className="bg-red bg-opacity-80 rounded-full w-10 h-10"></div>
-                </div>
+                        <div className="bg-red bg-opacity-80 rounded-full w-10 h-10"></div>
+                    </div>
                 )}
                 {highlight && !capture && (
                     <div className="absolute inset-0 flex justify-center items-center">
