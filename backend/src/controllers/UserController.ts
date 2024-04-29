@@ -1,15 +1,11 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-
 import { IUserModel, User } from '../models/User';
 import { ILoginUser, INewUser } from '@src/types';
 import { AuthenticatedRequest } from '@src/types/express';
 import mongoose, { Types } from 'mongoose';
 
-
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
-
-
 
 interface RegisterUserRequest extends Request {
     body: INewUser;

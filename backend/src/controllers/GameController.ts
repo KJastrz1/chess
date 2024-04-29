@@ -1,8 +1,7 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
-import { User } from '../models/User';
-import { Game } from '../models/Game';
-import { IGame } from '../types/index';
+import { Game } from '@src/models/Game';
+import { IGame } from '@src/types/index';
 import { AuthenticatedRequest } from '@src/types/express';
 import { buildQuery } from '@src/utils/utils';
 

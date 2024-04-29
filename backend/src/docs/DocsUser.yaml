@@ -1,0 +1,166 @@
+openapi: 3.0.0
+info:
+  title: Chess Game API - User Module
+  version: 1.0.0
+  description: This part of the API handles user management.
+
+paths:
+  /users/register:
+    post:
+      summary: Register a new user
+      tags: [User]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username:
+                  type: string
+                  description: Unique username
+                email:
+                  type: string
+                  description: User's email address
+                password:
+                  type: string
+                  description: User's password
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        400:
+          description: Bad request (e.g., missing data, username/email already in use)
+
+  /users/login:
+    post:
+      summary: Authenticate user and return JWT
+      tags: [User]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  description: User's email address
+                password:
+                  type: string
+                  description: User's password
+      responses:
+        201:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        400:
+          description: Invalid credentials
+
+  /users/profile/{id}:
+    get:
+      summary: Get user profile by ID
+      tags: [User]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        200:
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        404:
+          description: User not found
+
+  /users/get-current-user:
+    get:
+      summary: Get the profile of the currently authenticated user
+      tags: [User]
+      responses:
+        200:
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  /users/logout:
+    get:
+      summary: Logout the current user
+      tags: [User]
+      responses:
+        200:
+          description: User logged out successfully
+
+  /users/get-websocket-token:
+    get:
+      summary: Get a websocket token for the current user
+      tags: [User]
+      responses:
+        200:
+          description: Websocket token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token for websocket connection
+
+components:
+  schemas:
+    UserResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: User ID
+        username:
+          type: string
+          description: Username
+        email:
+          type: string
+          description: User's email
+
+    UserProfile:
+      type: object
+      properties:
+        _id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+securitySchemes:
+  BearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: User
+    description: Operations about user
