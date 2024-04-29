@@ -2,12 +2,12 @@ export const navBarLinks = [
     {
 
         route: "/",
-        label: "Games",
+        label: "Play",
     },
     {
 
-        route: "/explore",
-        label: "Explore",
+        route: "/history",
+        label: "Game History",
     },
     {
 

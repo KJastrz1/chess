@@ -93,7 +93,7 @@ export type IGameParams = {
     player1Username?: string;
     player2Username?: string;
     updatedAt?: string;
-    createdAt?: string;
+    createdAt?: string;  
 };
 
 export type IMove = {

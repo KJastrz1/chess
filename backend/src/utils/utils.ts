@@ -1,15 +1,22 @@
-import { User } from '@src/models/User';
-import { IGameParams } from '@src/types';
+import { IUserModel, User } from '@src/models/User';
+import { GameStatus, IGameParams } from '@src/types';
 import mongoose from 'mongoose';
 
-export async function buildGamesQuery(params: IGameParams, schemaPaths: any, requestingUserElo?: number) {
-    console.log("params", params)
+export async function buildGamesQuery(params: IGameParams, schemaPaths: any, requestingUser: IUserModel) {
+
     const query: { [key: string]: any } = {};
     const eloRange = 100;
 
-    if (requestingUserElo) {
+    if (requestingUser && params.status === GameStatus.Finished) {
+        query['$or'] = [
+            { player1: requestingUser._id },
+            { player2: requestingUser._id }
+        ];
+    }
+
+    if (requestingUser?.eloRating) {
         const eloUsers = await User.find({
-            eloRating: { $gte: requestingUserElo - eloRange, $lte: requestingUserElo + eloRange }
+            eloRating: { $gte: requestingUser.eloRating - eloRange, $lte: requestingUser.eloRating + eloRange }
         }).select('_id');
         const eloUserIds = eloUsers.map(user => user._id.toString());
 
@@ -53,8 +60,8 @@ export async function buildGamesQuery(params: IGameParams, schemaPaths: any, req
             }
         }
     }
-    console.log("Final MongoDB Query:", query);
 
+    console.log("query", query)
     return query;
 }
 

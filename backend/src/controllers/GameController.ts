@@ -24,8 +24,8 @@ export interface GetAllGamesRequest extends AuthenticatedRequest {
 export const getAllGames = async (req: GetAllGamesRequest, res: Response): Promise<void> => {
    
     try {
-        const userElo = req.user.eloRating;
-        const query = await buildGamesQuery(req.query, Game.schema.paths, userElo);
+      
+        const query = await buildGamesQuery(req.query, Game.schema.paths, req.user);
 
         const games = await Game.find(query)
             .populate('player1', 'username eloRating')

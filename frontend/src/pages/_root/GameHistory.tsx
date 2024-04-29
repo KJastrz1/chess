@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { useCreateGame, useGetGameById, useGetGames } from "../../lib/queries"
+import { useState } from "react";
+import { useGetGames } from "../../lib/queries"
 import { FaRegClock } from 'react-icons/fa'
 import { useNavigate } from "react-router-dom";
-import useDebounce from "@/hooks/useDebounce";
+
 import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
@@ -11,14 +11,15 @@ import { IGameListItem } from "@/types";
 import { useUserContext } from "@/context/AuthContext";
 
 
-const Home = () => {
-    const {user}=useUserContext();  
+const GameHistory = () => {
+    const { user } = useUserContext();
     const navigate = useNavigate();
     const [games, setGames] = useState<IGameListItem[] | null>(null);
+    const gamesQuery = useGetGames();
 
 
 
- 
+
 
 
     return (
@@ -45,7 +46,7 @@ const Home = () => {
                                 <LoadingButton />
                             </div>
                         ) : "Join game"}
-                    </Button>                    
+                    </Button>
                 </div>
             </div>
 
@@ -53,7 +54,7 @@ const Home = () => {
                 <div className="flex w-full h-full p-10 justify-center items-center">
                     <Loader />
                 </div>}
-          
+
             {!isLoadingGames && games &&
                 <div className="w-full md:p-10">
                     <div className="grid grid-cols-3 text-lg font-semibold py-4 border-b border-gray-800 dark:border-gray-200">
@@ -72,7 +73,7 @@ const Home = () => {
                                 <Button onClick={() => navigate(`/game/${game._id}`)} >
                                     Join Game
                                 </Button>
-                               
+
                             </span>
                         </div>
                     ))}
@@ -82,4 +83,4 @@ const Home = () => {
     )
 }
 
-export default Home
+export default GameHistory;

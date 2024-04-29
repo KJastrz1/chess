@@ -11,7 +11,6 @@ import { GameStatus, IGameListItem } from "@/types";
 
 
 const Home = () => {
-
     const [gameId, setGameId] = useState('');
     const [activeGameId, setActiveGameId] = useState('');
     const navigate = useNavigate();
