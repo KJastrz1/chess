@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { ChessSquare, GameStatus, IGame, IMove, PossibleMove, SelectedPiece, White } from '@/types';
@@ -29,7 +29,7 @@ function Board() {
   const [moveTimeInput, setMoveTimeInput] = useState<number>(180);
   const [moveTimeMessage, setMoveTimeMessage] = useState<string | null>(null);
 
-  const startTimer = (duration: number): void => {
+  const startTimer = useCallback((duration: number) => {
     setTimeLeft(duration);
     if (moveTimer) {
       clearTimeout(moveTimer);
@@ -44,7 +44,7 @@ function Board() {
       });
     }, 1000);
     setMoveTimer(timerId);
-  };
+  }, [setTimeLeft, moveTimer]);
 
   useEffect(() => {
     if (!socket && token) {
@@ -65,15 +65,11 @@ function Board() {
         setIsWhitePlayer(receivedGame.whitePlayer === user._id);
         setIsLoadingGameFromSocket(false);
         setOpponentLeft(false);
-        startTimer(receivedGame.moveTime);
       });
 
       socket.on('timeOut', (newTurnObject: { newTurn: string }) => {
         setIsPlayerTurn(newTurnObject.newTurn === user._id);
-        if (game) {
-          startTimer(game.moveTime);
-          console.log('timeOut', game.moveTime);
-        }
+        console.log('timeOut');
       });
 
       socket.on('playerLeft', () => {
@@ -84,6 +80,13 @@ function Board() {
       socket?.disconnect();
     };
   }, [token]);
+
+  useEffect(() => {
+    if (game && game.status === GameStatus.InProgress) {
+      startTimer(game.moveTime);
+      console.log('starting timer again for game', game._id);
+    }
+  }, [game, isPlayerTurn]);
 
   useEffect(() => {
     return () => {
@@ -157,7 +160,7 @@ function Board() {
       <div className="grid grid-cols-8 gap-0">
         {renderBoard()}
       </div>
-      <div className="flex flex-col justify-center self-start p-5">
+      <div className="flex flex-col justify-center p-5">
         {opponentLeft && (
           <div className="text-xl font-semibold text-red">Opponent has left the game! You won!</div>
         )}

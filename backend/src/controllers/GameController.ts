@@ -27,17 +27,19 @@ export interface GetAllGamesRequest extends AuthenticatedRequest {
         moveTime?: string;
         winner?: string;
         player1Username?: string;
+        eloRange?: string;
     };
 }
-
 export const getAllGames = async (req: GetAllGamesRequest, res: Response): Promise<void> => {
     console.log("query", req.query);
     try {
-        const query = buildQuery(req.query, Game.schema.paths);
+        const userElo = req.user.eloRating;
+        const query = await buildQuery(req.query, Game.schema.paths, userElo);
 
         const games = await Game.find(query)
-            .populate('player1', 'username')
-            .populate('player2', 'username');
+            .populate('player1', 'username eloRating') 
+            .populate('player2', 'username eloRating');
+
         console.log("games", games.length);
         res.json(games);
     } catch (err) {

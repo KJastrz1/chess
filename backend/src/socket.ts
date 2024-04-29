@@ -5,6 +5,7 @@ import { IUserModel, User } from './models/User';
 import { GameStatus, IMove } from './types';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { isMovePossible } from './utils/chessLogic';
+import { updateEloRating } from './controllers/UserController';
 
 const gamesState: Record<string, IGameModel> = {};
 const disconnectionTimers: Record<string, NodeJS.Timeout> = {};
@@ -79,7 +80,7 @@ export default (io: SocketIOServer) => {
                     cb('Player not assigned to this game');
                     return;
                 }
-            
+
                 if (game.player1.toString() === playerId) {
                     game.player1Connected = true;
                 }
@@ -162,8 +163,8 @@ export default (io: SocketIOServer) => {
                 if (moveTime > 300) {
                     moveTime = 300;
                 }
-                game.moveTime = moveTime;   
-                cb("Time limit set to " + moveTime + " seconds")             
+                game.moveTime = moveTime;
+                cb("Time limit set to " + moveTime + " seconds")
                 socket.to(gameId).emit('receiveGame', game);
                 await Game.findByIdAndUpdate(gameId, game);
             }
@@ -200,7 +201,9 @@ export default (io: SocketIOServer) => {
 
                     game.winner = game.player1.toString() === playerId ? game.player2 : game.player1;
                     game.status = GameStatus.Finished;
+                    const loser = game.player1.toString() === playerId ? game.player1 : game.player2;
                     try {
+                        await updateEloRating(game.winner, loser);
                         await Game.findByIdAndUpdate(gameId, game);
                         console.log(`Gra ${gameId} zaktualizowana po rozłączeniu klienta.`);
                     } catch (error) {
@@ -218,11 +221,10 @@ export default (io: SocketIOServer) => {
                 if (game) {
                     game.whosMove = game.whosMove.toString() === game.player1.toString() ? game.player2 : game.player1;
                     console.log(`Czas na ruch minął, teraz kolej na: ${game.whosMove}`);
-
+                    startMoveTimer(gameId, moveTime);
                     io.to(gameId).emit('timeOut', { newTurn: game.whosMove });
                 }
             }, moveTime * 1000);
-
 
             gamesState[gameId].timer = timeoutId;
         };

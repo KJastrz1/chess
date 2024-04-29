@@ -1,16 +1,13 @@
-import { Outlet, Navigate, useLocation } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import { useUserContext } from "@/context/AuthContext";
 import Loader from "@/components/Ui/Loader";
 
 export default function AuthLayout() {
     const { isAuthenticated, isLoading } = useUserContext(); 
 
-    if (isLoading) {
-        console.log('loading user');
+    if (isLoading) {    
         return <Loader />;
-    }
-
-    console.log("is auth", isAuthenticated)
+    }  
 
     return (
         <>

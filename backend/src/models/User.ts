@@ -1,9 +1,10 @@
-import mongoose, { Schema, Document, Types  } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUserModel extends Document {
   _id: Types.ObjectId;
   username: string;
+  eloRating: number;
   email: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -18,6 +19,10 @@ const userSchema: Schema = new mongoose.Schema({
     trim: true,
     minlength: [3, 'Username must be at least 3 characters'],
     maxlength: [50, 'Username cannot exceed 50 characters']
+  },
+  eloRating: {
+    type: Number,
+    default: 1200,
   },
   email: {
     type: String,
@@ -63,5 +68,7 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.matchPassword = async function (enteredPassword: string): Promise<boolean> {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+
 
 export const User = mongoose.model<IUserModel>('User', userSchema);

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { IUserModel, User } from '../models/User';
 import { ILoginUser, INewUser } from '@src/types';
 import { AuthenticatedRequest } from '@src/types/express';
+import mongoose, { Types } from 'mongoose';
 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
@@ -136,3 +137,32 @@ export const getWebSocketToken = async (req: AuthenticatedRequest, res: Response
 
     res.json({ token: websocketToken });
 };
+
+export async function updateEloRating(winnerId: Types.ObjectId, loserId: Types.ObjectId) {
+    const kFactor = 32;
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const winner = await User.findById(winnerId).session(session);
+        const loser = await User.findById(loserId).session(session);
+
+        if (!winner || !loser) {
+            throw new Error('One or both users not found');
+        }
+
+        const expectedScoreWinner = 1 / (1 + Math.pow(10, (loser.eloRating - winner.eloRating) / 400));
+        const expectedScoreLoser = 1 / (1 + Math.pow(10, (winner.eloRating - loser.eloRating) / 400));
+
+        winner.eloRating += kFactor * (1 - expectedScoreWinner);
+        loser.eloRating += kFactor * (0 - expectedScoreLoser);
+
+        await winner.save({ session: session });
+        await loser.save({ session: session });
+        await session.commitTransaction();
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        session.endSession();
+    }
+}
