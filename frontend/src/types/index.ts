@@ -66,13 +66,19 @@ export type INewUser = {
     password: string;
 };
 
+export type IPlayer = {
+    _id: string;
+    username: string;
+    eloRating: number;
+};
+
 //================================================
 // GAME TYPES
 //================================================
 export type IGame = {
     _id: string;
-    player1: string;
-    player2: string;
+    player1: IPlayer;
+    player2: IPlayer | null;
     board: ChessSquare[][];
     whitePlayer: string;
     whosMove: string;
@@ -87,13 +93,26 @@ export type IGame = {
 export type IGameParams = {
     player1?: string;
     player2?: string;
-    status?: string;
+    status: GameStatus.WaitingForPlayer2 | GameStatus.WaitingForStart;
     moveTime?: string;
     winner?: string;
     player1Username?: string;
     player2Username?: string;
     updatedAt?: string;
-    createdAt?: string;  
+    createdAt?: string;
+};
+
+export type IGameHistoryParams = {
+    player1?: string;
+    player2?: string;
+    status: GameStatus.Finished;
+    moveTime?: string;
+    winner?: string;
+    result?: 'won' | 'lost' | 'draw';
+    player1Username?: string;
+    player2Username?: string;
+    updatedAt?: string;
+    createdAt?: string;
 };
 
 export type IMove = {

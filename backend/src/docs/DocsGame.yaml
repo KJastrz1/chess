@@ -150,6 +150,48 @@ paths:
           description: Game not found
         500:
           description: Server error
+  /games/history:
+    get:
+      summary: Get game history for a user
+      tags:
+        - Games
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: player1Username
+          schema:
+            type: string
+          description: Filter by player1's username
+        - in: query
+          name: player2Username
+          schema:
+            type: string
+          description: Filter by player2's username
+        - in: query
+          name: result
+          schema:
+            type: string
+            enum:
+              - won
+              - lost
+              - draw
+          description: Filter by game result relative to the authenticated user
+      responses:
+        200:
+          description: An array of games matching the history criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Game"
+        400:
+          description: Invalid request parameters
+        401:
+          description: Authorization information is missing or invalid.
+        500:
+          description: Server error
 components:
   schemas:
     ChessPiece:

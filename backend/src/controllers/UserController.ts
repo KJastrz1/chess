@@ -75,7 +75,6 @@ export const login = async (req: LoginUserRequest, res: Response) => {
             maxAge: 604800000
         });
         const userResponse = {
-
             _id: user._id,
             username: user.username,
             email: user.email,

@@ -7,79 +7,74 @@ import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
 import LoadingButton from "@/components/Ui/LoadingButton";
-import { IGameListItem } from "@/types";
+import { GameStatus, IGame, IGameListItem, IGameParams } from "@/types";
 import { useUserContext } from "@/context/AuthContext";
+import Select from "@/components/Ui/Select";
 
 
 const GameHistory = () => {
     const { user } = useUserContext();
     const navigate = useNavigate();
-    const [games, setGames] = useState<IGameListItem[] | null>(null);
-    const gamesQuery = useGetGames();
+    const [gameResult, setGameResult] = useState<string>("");
+    const [tempParams, setTempParams] = useState<IGameParams>({});
+    const [params, setParams] = useState<IGameParams>({ status: GameStatus.Finished });
+    const gamesQuery = useGetGames(params);
 
 
+    const handleSearchChange = (newParams: Partial<IGameParams>) => {
+        setTempParams(prev => ({ ...prev, ...newParams }));
+    };
 
+    const handleSearch = () => {
+        setParams(tempParams);
+    };
 
-
+    const handleResultChange = (event) => {
+        setGameResult(event.target.value);
+        switch (gameResult) {
+            case "won":
+                handleSearchChange({ winner: user._id });
+                break;
+            case "lost":
+                handleSearchChange({ winner: { $ne: user._id, $ne: null } });
+                break;
+            case "draw":
+                handleSearchChange({ winner: 'draw' });
+                break;
+            default:
+            // Handle unexpected case
+        }
+    };
 
     return (
-        <div className="flex flex-col items-center p-4">
-            <div className="flex flex-col md:flex-row gap-3 w-full justify-between items-center lg:px-10">
-
-                <Input type="text" placeholder="Search username" onChange={(e) => { setSearchValue(e.target.value) }} />
-
-
-                <Button className="whitespace-nowrap" disabled={isLoadingCreateGame} onClick={handleCreate}>
-                    {isLoadingCreateGame ? (
-                        <div className="flex-center">
-                            <LoadingButton />
-                        </div>
-                    ) : "Create game"}
-                </Button>
-
-
-                <div className="flex flex-row items-center gap-2 md:gap-4">
-                    <Input className="w-56" type="text" placeholder="Enter game ID" onChange={(e) => { setGameId(e.target.value) }} />
-                    <Button className="whitespace-nowrap" disabled={isLoadingGame} onClick={handleJoin}>
-                        {isLoadingGame ? (
-                            <div className="flex-center">
-                                <LoadingButton />
-                            </div>
-                        ) : "Join game"}
-                    </Button>
-                </div>
-            </div>
-
-            {isLoadingGames &&
-                <div className="flex w-full h-full p-10 justify-center items-center">
+        <div className="flex flex-col items-center p-4 gap-3">
+            <Input
+                placeholder="Search by opponent username"
+                onChange={(e) => handleSearchChange({ player2Username: e.target.value })}
+            />
+            <Select id="gameResult" value={gameResult} onChange={handleResultChange}>
+                <option value="">Select result</option>
+                <option value="won">Won</option>
+                <option value="lost">Lost</option>
+                <option value="draw">Draw</option>
+            </Select>
+            <Button onClick={handleSearch}>Szukaj</Button>
+            <div>
+                {gamesQuery.isLoading ? (
                     <Loader />
-                </div>}
-
-            {!isLoadingGames && games &&
-                <div className="w-full md:p-10">
-                    <div className="grid grid-cols-3 text-lg font-semibold py-4 border-b border-gray-800 dark:border-gray-200">
-                        <span className="justify-self-start ml-2">Player</span>
-                        <span className="justify-self-center">Turn time</span>
-                        <span className="justify-self-end mr-10">Action</span>
-                    </div>
-                    {games.map((game: IGameListItem) => (
-                        <div key={game._id} className="grid grid-cols-3 items-center border-b border-gray-800 dark:border-gray-200 p-4">
-                            <span className="justify-self-start">{game.player1?.username}</span>
-                            <span className="justify-self-center">
-                                <FaRegClock className="text-lg mr-1 inline" />
-                                {game.moveTime} s
-                            </span>
-                            <span className="justify-self-end">
-                                <Button onClick={() => navigate(`/game/${game._id}`)} >
-                                    Join Game
-                                </Button>
-
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            }
-        </div >
+                ) : gamesQuery.error ? (
+                    <div>Error: {gamesQuery.error.message}</div>
+                ) : (
+                    <ul>
+                        {gamesQuery.data?.map((game: IGame) => (
+                            (<li key={game._id}>
+                                {user.username} vs {game.player1.username} - Result: {game.winner}
+                            </li>)
+                        ))}
+                    </ul>
+                )}
+            </div>
+        </div>
     )
 }
 

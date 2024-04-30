@@ -1,9 +1,9 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import { Game } from '@src/models/Game';
-import { IGame, IGameParams } from '@src/types/index';
+import { IGame, IGameHistoryParams, IGameParams } from '@src/types/index';
 import { AuthenticatedRequest } from '@src/types/express';
-import { buildGamesQuery } from '@src/utils/utils';
+import { buildGameHistoryQuery, buildGamesQuery } from '@src/services/GameService';
 
 export const createGame = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
@@ -18,11 +18,10 @@ export const createGame = async (req: AuthenticatedRequest, res: Response): Prom
     }
 };
 
-export interface GetAllGamesRequest extends AuthenticatedRequest {
+export interface GetGamesRequest extends AuthenticatedRequest {
     query: IGameParams;
 }
-export const getAllGames = async (req: GetAllGamesRequest, res: Response): Promise<void> => {
-   
+export const getGames = async (req: GetGamesRequest, res: Response): Promise<void> => {   
     try {
       
         const query = await buildGamesQuery(req.query, Game.schema.paths, req.user);
@@ -96,5 +95,25 @@ export const deleteGame = async (req: DeleteGameRequest, res: Response): Promise
         res.status(204).send();
     } catch (err: any) {
         res.status(500).json({ message: err.message });
+    }
+};
+
+export interface GetGamesHistoryRequest extends AuthenticatedRequest {
+    query: IGameHistoryParams;
+}
+export const getGamesHistory = async (req: GetGamesHistoryRequest, res: Response): Promise<void> => {   
+    try {
+      
+        const query = await buildGameHistoryQuery(req.query, Game.schema.paths, req.user);
+
+        const games = await Game.find(query)
+            .populate('player1', 'username eloRating')
+            .populate('player2', 'username eloRating');
+
+        console.log("games", games.length);
+        res.json(games);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
     }
 };
