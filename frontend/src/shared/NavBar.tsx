@@ -30,7 +30,7 @@ const Navbar = () => {
             </a>
 
             {/* Desktop Navigation */}
-            <ul className='hidden md:flex items-center gap-3'>
+            <ul className='hidden md:flex items-center gap-2'>
                 {navBarLinks.map((link: INavLink) => {
                     const isActive = pathname === link.route;
                     return (

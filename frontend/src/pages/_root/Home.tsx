@@ -45,7 +45,7 @@ const Home = () => {
         <div className="flex flex-col items-center p-4">
             <div className="flex flex-col md:flex-row gap-3 w-full justify-between items-center lg:px-10">
 
-                <Input type="text" placeholder="Search username" onChange={(e) => { setSearchValue(e.target.value) }} />
+                <Input type="text" placeholder="Search username" onChange={(e:React.ChangeEvent<HTMLInputElement>) => { setSearchValue(e.target.value) }} />
 
 
                 <Button className="whitespace-nowrap" disabled={isLoadingCreateGame} onClick={handleCreate}>
