@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "react-query";
-import { QUERY_KEYS } from "./keyQuery";
-import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, getWebSocketToken, getPendingGames, signInAccount, getGamesHistory } from "./api";
-import { IGameHistoryParams, IGameParams, ILoginUserRequest, IRegisterUserRequest } from "@/types";
+import { QUERY_KEYS } from "./keysQuery";
+import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, getWebSocketToken,  signInAccount, getGamesHistory, getRanking } from "./api";
+import { IGameHistoryParams, IGameParams, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from "@/types";
 import { toast } from "react-toastify";
 
 
@@ -45,6 +45,16 @@ export const useGetWebSocketToken = () => {
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 60 * 24 * 7,
         cacheTime: 1000 * 60 * 60 * 24 * 7,
+        onError: (error: Error) => {
+            toast.error(error.message);
+        },
+    });
+}
+
+export const useGetRanking = (params: IRankingParamsFrontend) => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_RANKING, params],
+        queryFn: () => getRanking(params),
         onError: (error: Error) => {
             toast.error(error.message);
         },

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { GameStatus, IGameHistoryParams, IGameParams, ILoginUserRequest, IRegisterUserRequest } from '@/types';
+import { GameStatus, IGameHistoryParams, IGameParams, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
@@ -51,6 +51,23 @@ export async function getWebSocketToken() {
         throw new Error('Failed to log out');
     }
 }
+
+export async function getRanking(frontendParams: IRankingParamsFrontend) {
+    try {
+        const params: IRankingParams = {
+            ...frontendParams,
+            minEloRating: frontendParams.minEloRating?.toString(),
+            maxEloRating: frontendParams.maxEloRating?.toString(),
+            page: frontendParams.page?.toString(),
+            itemsPerPage: frontendParams.itemsPerPage?.toString()
+        }
+        const response = await axios.get(`${API_URL}/users/ranking`, { params });
+        return response.data;
+    } catch (error) {
+        throw new Error('Failed to fetch ranking data');
+    }
+}
+
 
 // ============================================================
 // GAMES API

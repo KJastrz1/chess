@@ -81,6 +81,14 @@ export type IRankingParams = {
     itemsPerPage?: string;
 };
 
+export type IRankingParamsFrontend = {
+    username?: string;
+    minEloRating?: number;
+    maxEloRating?: number;
+    page?: number;
+    itemsPerPage?: number;
+};
+
 export type IPaginetedResult<T> = {
     totalItems: number;
     totalPages: number;

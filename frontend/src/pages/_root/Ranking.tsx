@@ -1,21 +1,21 @@
 import React, { useState } from "react";
-import { useGetGamesHistory } from "../../lib/queries";
+import { useGetRanking } from "../../lib/queries";
 import { useNavigate } from "react-router-dom";
 import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
-import Select from "@/components/Ui/Select";
-import { GameStatus, IGame, IGameHistoryParams } from "@/types";
+import { IRankingParamsFrontend, IUserProfileResponse } from "@/types";
 import { useUserContext } from "@/context/AuthContext";
+import PageButtons from "@/components/Ui/PageButtons";
 
 const Ranking = () => {
     const { user } = useUserContext();
-    const navigate = useNavigate();   
-    const [tempParams, setTempParams] = useState<IGameHistoryParams>({ status: GameStatus.Finished });
-    const [params, setParams] = useState<IGameHistoryParams>({ status: GameStatus.Finished });
-    const gamesQuery = useGetGamesHistory(params);
+    const navigate = useNavigate();
+    const [tempParams, setTempParams] = useState<IRankingParamsFrontend>({ page: 1, itemsPerPage: 20 });
+    const [params, setParams] = useState<IRankingParamsFrontend>({ page: 1, itemsPerPage: 20 });
+    const rankingQuery = useGetRanking(params);
 
-    const handleSearchChange = (newParams: Partial<IGameHistoryParams>) => {
+    const handleSearchChange = (newParams: Partial<IRankingParamsFrontend>) => {
         setTempParams(prev => ({ ...prev, ...newParams }));
     };
 
@@ -23,62 +23,49 @@ const Ranking = () => {
         setParams(tempParams);
     };
 
-    const handleResultChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const newResult = event.target.value;
-        setGameResult(newResult);
-        handleSearchChange({ result: newResult });
-    };
-
-    const getOpponentUsername = (game: IGame) => {
-        return game.player1 && game.player1._id !== user._id ? game.player1.username : game.player2 ? game.player2.username : 'Unknown';
-    };
-
-    const getGameResult = (game: IGame) => {
-        if (game.winner === null) {
-            return 'Draw';
-        }
-        if (game.winner === user._id) {
-            return 'Won';
-        }
-        return 'Lost';
+    const setPage = (page: number) => {
+        handleSearchChange({ page });
     }
+    console.log("ranking data", rankingQuery.data)
 
     return (
         <div className="flex flex-col items-center p-4 gap-4">
             <div className="flex flex-col md:flex-row gap-4">
                 <Input
-                    placeholder="Opponent username"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange({ opponentUsername: e.target.value })}
+                    placeholder="Username"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange({ username: e.target.value })}
                 />
-                <Select id="gameResult" value={gameResult} onChange={handleResultChange}>
-                    <option value="">Any result</option>
-                    <option value="won">Won</option>
-                    <option value="lost">Lost</option>
-                    <option value="draw">Draw</option>
-                </Select>
+                <div className="flex flex-row items-center gap-2 md:gap-4">
+                    <Input
+                        type='number'
+                        placeholder="Min ELO"
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange({ minEloRating: e.target.value })} />
+                    <Input
+                        type="number"
+                        placeholder="Max ELO"
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange({ maxEloRating: e.target.value })} />
+                </div>
+
                 <Button onClick={handleSearch}>Search</Button>
             </div>
 
-            {gamesQuery.isLoading ? (
+
+            {rankingQuery.isLoading ? (
                 <div className="flex w-full h-full p-10 justify-center items-center">
                     <Loader />
                 </div>
-            ) : gamesQuery.data ? (
-                <div className="w-full md:p-10 ">
-                    {gamesQuery.data.map((game: IGame) => (
-                        <div key={game._id} className="grid grid-cols-3 items-center border-b border-gray-800 dark:border-gray-200 p-4">
-                            <span className="justify-self-start">vs. {getOpponentUsername(game)}</span>
-                            {getGameResult(game) === 'Won' ?
-                                <span className="justify-self-center text-green-500">{getGameResult(game)}</span>
-                                : getGameResult(game) === 'Lost' ?
-                                    <span className="justify-self-center text-rose-500">{getGameResult(game)}</span>
-                                    : <span className="justify-self-center text-white">{getGameResult(game)}</span>
-                            }
-                            <span className="justify-self-end">
-                                <Button onClick={() => navigate(`/game/${game._id}`)}>
-                                    Show Game
-                                </Button>
-                            </span>
+            ) : rankingQuery.data ? (
+                <div className="w-full md:p-10">
+                    <div className="flex justify-center mb-4">
+                        <PageButtons
+                            page={rankingQuery.data?.currentPage || 1}
+                            totalPages={rankingQuery.data?.totalPages || 1}
+                            setPage={setPage} />
+                    </div>
+                    {rankingQuery.data.items.map((player: IUserProfileResponse) => (
+                        <div key={player._id} className="grid grid-cols-3 items-center border-b border-gray-800 dark:border-gray-200 p-4">
+                            <span className="justify-self-start font-semibold">{player.username}</span>
+                            <span className="justify-self-start font-semibold"> {Math.floor(player.eloRating)}</span>
                         </div>
                     ))}
                 </div>
