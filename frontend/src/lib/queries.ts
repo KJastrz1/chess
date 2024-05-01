@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "react-query";
 import { QUERY_KEYS } from "./keyQuery";
 import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, getWebSocketToken, getPendingGames, signInAccount, getGamesHistory } from "./api";
-import { IGameHistoryParams, IGameParams, ILoginUser, INewUser } from "@/types";
+import { IGameHistoryParams, IGameParams, ILoginUserRequest, IRegisterUserRequest } from "@/types";
 import { toast } from "react-toastify";
 
 
@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 // ============================================================
 export const useCreateUserAccount = () => {
     return useMutation({
-        mutationFn: (user: INewUser) => createUserAccount(user),
+        mutationFn: (user: IRegisterUserRequest) => createUserAccount(user),
         onError: (error: Error) => {
             toast.error(error.message);
         },
@@ -20,7 +20,7 @@ export const useCreateUserAccount = () => {
 
 export const useSignInAccount = () => {
     return useMutation({
-        mutationFn: (user: ILoginUser) =>
+        mutationFn: (user: ILoginUserRequest) =>
             signInAccount(user),
         onError: (error: Error) => {
             toast.error(error.message);

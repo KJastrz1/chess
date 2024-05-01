@@ -1,27 +1,22 @@
 export const navBarLinks = [
     {
-
         route: "/",
         label: "Play",
     },
     {
-
         route: "/history",
         label: "Game History",
     },
     {
-
-        route: "/all-users",
-        label: "People",
+        route: "/ranking",
+        label: "Ranking",
     },
     {
-
-        route: "/saved",
-        label: "Saved",
+        route: "/profile",
+        label: "Profile",
     },
     {
-
-        route: "/create-post",
-        label: "Create Post",
+        route: "/settings",
+        label: "Settings",
     },
 ];

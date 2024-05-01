@@ -1,5 +1,5 @@
 import axios from "axios";
-import { GameStatus, IGameHistoryParams, IGameParams, ILoginUser, INewUser } from '@/types';
+import { GameStatus, IGameHistoryParams, IGameParams, ILoginUserRequest, IRegisterUserRequest } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
@@ -7,7 +7,7 @@ axios.defaults.withCredentials = true;
 // ============================================================
 // AUTH API
 // ============================================================
-export async function createUserAccount(user: INewUser) {
+export async function createUserAccount(user: IRegisterUserRequest) {
     try {
         const response = await axios.post(`${API_URL}/users/register`, user);
         return response.data;
@@ -16,7 +16,7 @@ export async function createUserAccount(user: INewUser) {
     }
 }
 
-export async function signInAccount(user: ILoginUser) {
+export async function signInAccount(user: ILoginUserRequest) {
     try {
         const response = await axios.post(`${API_URL}/users/login`, user);
         return response.data;

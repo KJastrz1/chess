@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { IUserModel, User } from '../models/User';
-import { ILoginUser, INewUser } from '@src/types';
+import {  User } from '../models/User';
+import { ILoginUserRequest, IRegisterUserRequest,  IRankingParams, IUserProfileResponse } from '@src/types';
 import { AuthenticatedRequest } from '@src/types/express';
-import mongoose, { Types } from 'mongoose';
+import { getRankingPaginated } from '@src/services/UserService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
+
 interface RegisterUserRequest extends Request {
-    body: INewUser;
+    body: IRegisterUserRequest;
 }
 export const register = async (req: RegisterUserRequest, res: Response): Promise<void> => {
     console.log('register');
@@ -50,8 +51,9 @@ export const register = async (req: RegisterUserRequest, res: Response): Promise
     }
 };
 
+
 interface LoginUserRequest extends Request {
-    body: ILoginUser;
+    body: ILoginUserRequest;
 }
 export const login = async (req: LoginUserRequest, res: Response) => {
     console.log('login body: ', req.body);
@@ -104,20 +106,26 @@ export const logout = async (req: AuthenticatedRequest, res: Response) => {
     res.status(200).send('Logged out');
 };
 
+
 export interface GetProfileRequest extends AuthenticatedRequest {
     params: {
         id: string;
     };
 }
-export const getProfile = async (req: GetProfileRequest, res: Response): Promise<void> => {
+export const getProfile = async (req: GetProfileRequest, res: Response)=> {
     console.log('getProfile');
     try {
         const user = await User.findById(req.params.id);
         if (!user) {
             res.status(404).json({ message: 'User not found' });
             return;
-        }
-        res.status(200).json(user);
+        }      
+        const result:IUserProfileResponse = {
+            _id: user._id.toString(),
+            username: user.username,
+            eloRating: user.eloRating
+        };  
+        res.status(200).json(result);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -133,31 +141,19 @@ export const getWebSocketToken = async (req: AuthenticatedRequest, res: Response
     res.json({ token: websocketToken });
 };
 
-export async function updateEloRating(winnerId: Types.ObjectId, loserId: Types.ObjectId) {
-    const kFactor = 32;
-    const session = await mongoose.startSession();
-    session.startTransaction();
+
+export interface GetRankingRequest extends AuthenticatedRequest {
+    query: IRankingParams;
+}
+export async function getRanking(req: GetRankingRequest, res: Response) {
     try {
-        const winner = await User.findById(winnerId).session(session);
-        const loser = await User.findById(loserId).session(session);
-
-        if (!winner || !loser) {
-            throw new Error('One or both users not found');
-        }
-
-        const expectedScoreWinner = 1 / (1 + Math.pow(10, (loser.eloRating - winner.eloRating) / 400));
-        const expectedScoreLoser = 1 / (1 + Math.pow(10, (winner.eloRating - loser.eloRating) / 400));
-
-        winner.eloRating += kFactor * (1 - expectedScoreWinner);
-        loser.eloRating += kFactor * (0 - expectedScoreLoser);
-
-        await winner.save({ session: session });
-        await loser.save({ session: session });
-        await session.commitTransaction();
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
-    } finally {
-        session.endSession();
+        const result = await getRankingPaginated(req.query);
+        res.json(result);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
     }
 }
+
+

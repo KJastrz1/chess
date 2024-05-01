@@ -32,7 +32,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: '#/components/schemas/User'
         400:
           description: Bad request (e.g., missing data, username/email already in use)
 
@@ -60,7 +60,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: '#/components/schemas/User'
         400:
           description: Invalid credentials
 
@@ -121,20 +121,85 @@ paths:
                     type: string
                     description: JWT token for websocket connection
 
+/users/ranking:
+  get:
+    summary: Retrieve a paginated list of users based on Elo ranking
+    tags: [User]
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: query
+        name: username
+        required: false
+        schema:
+          type: string
+        description: Filter ranking by username (case insensitive regex search)
+      - in: query
+        name: minEloRating
+        required: false
+        schema:
+          type: string
+        description: Minimum Elo rating to filter the rankings
+      - in: query
+        name: maxEloRating
+        required: false
+        schema:
+          type: string
+        description: Maximum Elo rating to filter the rankings
+      - in: query
+        name: page
+        required: false
+        schema:
+          type: string
+        description: Page number of the rankings to retrieve
+      - in: query
+        name: itemsPerPage
+        required: false
+        schema:
+          type: string
+        description: Number of ranking items per page
+    responses:
+      200:
+        description: Successfully retrieved list of ranked users
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                totalItems:
+                  type: integer
+                  description: Total number of users matching the ranking criteria
+                totalPages:
+                  type: integer
+                  description: Total number of pages
+                currentPage:
+                  type: integer
+                  description: Current page number
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/UserProfile'
+      400:
+        description: Invalid input or request parameters
+      500:
+        description: Server Error
+
 components:
   schemas:
-    UserResponse:
+    User:
       type: object
       properties:
         _id:
           type: string
-          description: User ID
+       
         username:
           type: string
-          description: Username
+       
         email:
           type: string
-          description: User's email
+     
+        eloRating:
+          type: integer      
 
     UserProfile:
       type: object
@@ -143,14 +208,9 @@ components:
           type: string
         username:
           type: string
-        email:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
+        eloRating:
+          type: integer
+
 
 securitySchemes:
   BearerAuth:

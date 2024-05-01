@@ -50,35 +50,51 @@ export type SelectedPiece = {
 //================================================
 // USER TYPES
 //================================================
-export type IUser = {
+export type IUserResponse = {
     _id: string;
     username: string;
     email: string;
+    eloRating: number;
 };
-export type ILoginUser = {
+export type ILoginUserRequest = {
     email: string;
     password: string;
 };
 
-export type INewUser = {
+export type IRegisterUserRequest = {
     email: string;
     username: string;
     password: string;
 };
 
-export type IPlayer = {
+export type IUserProfileResponse = {
     _id: string;
     username: string;
     eloRating: number;
 };
+
+export type IRankingParams = {
+    username?: string;
+    minEloRating?: string;
+    maxEloRating?: string;
+    page?: string;
+    itemsPerPage?: string;
+};
+
+export type IPaginetedResult<T> = {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    items: T[];
+}
 
 //================================================
 // GAME TYPES
 //================================================
 export type IGame = {
     _id: string;
-    player1: IPlayer;
-    player2: IPlayer | null;
+    player1: IUserProfileResponse;
+    player2: IUserProfileResponse | null;
     board: ChessSquare[][];
     whitePlayer: string;
     whosMove: string;

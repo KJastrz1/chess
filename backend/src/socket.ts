@@ -5,7 +5,8 @@ import { IUserModel, User } from './models/User';
 import { GameStatus, IMove } from './types';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { isMovePossible } from './utils/chessLogic';
-import { updateEloRating } from './controllers/UserController';
+import { updateEloRating } from './services/UserService';
+
 
 const gamesState: Record<string, IGameModel> = {};
 const disconnectionTimers: Record<string, NodeJS.Timeout> = {};
