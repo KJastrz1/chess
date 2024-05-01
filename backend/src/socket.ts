@@ -184,24 +184,28 @@ export default (io: SocketIOServer) => {
             console.log(`User rozłączony: ${socket.data.user._id}, Powód: ${reason}`);
 
             const gameId = socket.data.gameId;
-            if (gameId && gamesState[gameId]) {
-                const game = gamesState[gameId];
-                const playerId = socket.data.user._id.toString();
-                if (game.status === GameStatus.WaitingForStart && playerId === game.player2.toString()) {
-                    game.status = GameStatus.WaitingForPlayer2;
-                    game.player2Connected = false;
-                    socket.to(gameId).emit('receiveGame', game);
-                }
-                if ((game.status === GameStatus.WaitingForPlayer2 || game.status === GameStatus.WaitingForStart) && playerId === game.player1.toString()) {
-                    delete gamesState[gameId];
-                    await Game.findByIdAndDelete(gameId);
-                }
+            const game = gamesState[gameId];
+            if (!gameId || !gamesState[gameId]) {
+                return;
+            }
+
+            const playerId = socket.data.user._id.toString();
+            if (game.status === GameStatus.WaitingForStart && playerId === game.player2.toString()) {
+                game.status = GameStatus.WaitingForPlayer2;
+                game.player2Connected = false;
+                socket.to(gameId).emit('receiveGame', game);
+            }
+            else if ((game.status === GameStatus.WaitingForPlayer2 || game.status === GameStatus.WaitingForStart) && playerId === game.player1.toString()) {
+                delete gamesState[gameId];
+                await Game.findByIdAndDelete(gameId);
+            } else {
                 disconnectionTimers[playerId] = setTimeout(async () => {
                     socket.to(gameId).emit('playerLeft');
 
                     game.winner = game.player1.toString() === playerId ? game.player2 : game.player1;
                     game.status = GameStatus.Finished;
                     const loser = game.player1.toString() === playerId ? game.player1 : game.player2;
+                    delete gamesState[gameId];
                     try {
                         await updateEloRating(game.winner, loser);
                         await Game.findByIdAndUpdate(gameId, game);
@@ -213,7 +217,8 @@ export default (io: SocketIOServer) => {
                     console.log(`Gra ${gameId} zaktualizowana po rozłączeniu klienta.`);
                 }, 30000);
             }
-        });
+        }
+        );
 
         const startMoveTimer = (gameId: string, moveTime: number) => {
             const timeoutId = setTimeout(() => {

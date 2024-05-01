@@ -159,15 +159,10 @@ paths:
         - bearerAuth: []
       parameters:
         - in: query
-          name: player1Username
+          name: opponentUsername
           schema:
             type: string
-          description: Filter by player1's username
-        - in: query
-          name: player2Username
-          schema:
-            type: string
-          description: Filter by player2's username
+          description: Filter by opponent's username
         - in: query
           name: result
           schema:

@@ -103,14 +103,11 @@ export type IGameParams = {
 };
 
 export type IGameHistoryParams = {
-    player1?: string;
-    player2?: string;
     status: GameStatus.Finished;
     moveTime?: string;
     winner?: string;
     result?: 'won' | 'lost' | 'draw';
-    player1Username?: string;
-    player2Username?: string;
+    opponentUsername?: string;   
     updatedAt?: string;
     createdAt?: string;
 };

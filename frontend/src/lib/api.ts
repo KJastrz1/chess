@@ -1,5 +1,5 @@
 import axios from "axios";
-import { GameStatus, IGameParams, ILoginUser, INewUser } from '@/types';
+import { GameStatus, IGameHistoryParams, IGameParams, ILoginUser, INewUser } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
@@ -85,5 +85,14 @@ export async function createGame() {
         return response.data;
     } catch (error) {
         throw new Error('Failed to create a new game');
+    }
+}
+
+export async function getGamesHistory(params: IGameHistoryParams) {
+    try {
+        const response = await axios.get(`${API_URL}/games/history`, { params });
+        return response.data;
+    } catch (error) {
+        throw new Error('Failed to fetch games');
     }
 }

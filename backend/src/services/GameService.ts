@@ -58,11 +58,9 @@ export async function buildGamesQuery(params: IGameParams, schemaPaths: any, req
     return query;
 }
 
-
 export async function buildGameHistoryQuery(params: IGameHistoryParams, schemaPaths: any, requestingUser: IUserModel) {
+    console.log(params)
     const query: { [key: string]: any } = { status: GameStatus.Finished };
-
-    query['$or'] = [{ player1: requestingUser._id }, { player2: requestingUser._id }];
 
     if (params.result) {
         switch (params.result) {
@@ -78,23 +76,24 @@ export async function buildGameHistoryQuery(params: IGameHistoryParams, schemaPa
         }
     }
 
-    if (params.player1Username || params.player2Username) {
-        const opponentUsername = params.player1Username || params.player2Username;
-        const users = await User.find({ username: { $regex: new RegExp(opponentUsername ?? '', 'i') } }).select('_id');
-        const userIds = users.map(user => user._id.toString());
+    query['$or'] = [{ player1: requestingUser._id }, { player2: requestingUser._id }];
 
-        if (params.player1Username && params.player2Username) {
-            query['$or'].push({ player1: { $in: userIds } }, { player2: { $in: userIds } });
-        } else if (params.player1Username) {
-            query['$or'].push({ player1: { $in: userIds } });
-        } else if (params.player2Username) {
-            query['$or'].push({ player2: { $in: userIds } });
-        }
+    if (params.opponentUsername) {
+        const users = await User.find({ username: { $regex: new RegExp(params.opponentUsername, 'i') } }).select('_id');
+        const userIds = users.map(user => user._id).filter(id => !id.equals(requestingUser._id));
+        console.log(userIds);
+
+
+        query['$or'] = [
+            { player1: requestingUser._id, player2: { $in: userIds } },
+            { player2: requestingUser._id, player1: { $in: userIds } }
+        ];
+
     }
 
     for (const key of Object.keys(params) as (keyof IGameHistoryParams)[]) {
         const value = params[key];
-        if (value !== undefined && !['player1Username', 'player2Username', 'status', 'result'].includes(key) && schemaPaths[key]) {
+        if (value !== undefined && !['opponentUsername', 'status', 'result'].includes(key) && schemaPaths[key]) {
             const schemaType = schemaPaths[key].instance;
             switch (schemaType) {
                 case 'ObjectID':
@@ -120,6 +119,4 @@ export async function buildGameHistoryQuery(params: IGameHistoryParams, schemaPa
     console.log("Game History Query", query);
     return query;
 }
-
-
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetGames } from "../../lib/queries"
+import { useGetGames, useGetGamesHistory } from "../../lib/queries"
 import { FaRegClock } from 'react-icons/fa'
 import { useNavigate } from "react-router-dom";
 
@@ -7,7 +7,7 @@ import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
 import LoadingButton from "@/components/Ui/LoadingButton";
-import { GameStatus, IGame, IGameListItem, IGameParams } from "@/types";
+import { GameStatus, IGame, IGameHistoryParams, IGameListItem, IGameParams } from "@/types";
 import { useUserContext } from "@/context/AuthContext";
 import Select from "@/components/Ui/Select";
 
@@ -16,12 +16,12 @@ const GameHistory = () => {
     const { user } = useUserContext();
     const navigate = useNavigate();
     const [gameResult, setGameResult] = useState<string>("");
-    const [tempParams, setTempParams] = useState<IGameParams>({});
-    const [params, setParams] = useState<IGameParams>({ status: GameStatus.Finished });
-    const gamesQuery = useGetGames(params);
+    const [tempParams, setTempParams] = useState<IGameHistoryParams>({ status: GameStatus.Finished });
+    const [params, setParams] = useState<IGameHistoryParams>({ status: GameStatus.Finished });
+    const gamesQuery = useGetGamesHistory(params);
 
 
-    const handleSearchChange = (newParams: Partial<IGameParams>) => {
+    const handleSearchChange = (newParams: Partial<IGameHistoryParams>) => {
         setTempParams(prev => ({ ...prev, ...newParams }));
     };
 
@@ -33,16 +33,15 @@ const GameHistory = () => {
         setGameResult(event.target.value);
         switch (gameResult) {
             case "won":
-                handleSearchChange({ winner: user._id });
+                handleSearchChange({ result: 'won' });
                 break;
             case "lost":
-                handleSearchChange({ winner: { $ne: user._id, $ne: null } });
+                handleSearchChange({ result: 'lost' });
                 break;
             case "draw":
-                handleSearchChange({ winner: 'draw' });
+                handleSearchChange({ result: 'draw' });
                 break;
             default:
-            // Handle unexpected case
         }
     };
 
@@ -50,7 +49,7 @@ const GameHistory = () => {
         <div className="flex flex-col items-center p-4 gap-3">
             <Input
                 placeholder="Search by opponent username"
-                onChange={(e) => handleSearchChange({ player2Username: e.target.value })}
+                onChange={(e) => handleSearchChange({ opponentUsername: e.target.value })}
             />
             <Select id="gameResult" value={gameResult} onChange={handleResultChange}>
                 <option value="">Select result</option>
