@@ -7,6 +7,7 @@ import Button from "@/components/Ui/Button";
 import { IRankingParamsFrontend, IUserProfileResponse } from "@/types";
 import { useUserContext } from "@/context/AuthContext";
 import PageButtons from "@/components/Ui/PageButtons";
+import { FaTrophy } from "react-icons/fa";
 
 const Ranking = () => {
     const { user } = useUserContext();
@@ -25,49 +26,65 @@ const Ranking = () => {
 
     const setPage = (page: number) => {
         handleSearchChange({ page });
-    }
-    console.log("ranking data", rankingQuery.data)
+    };
 
     return (
         <div className="flex flex-col items-center p-4 gap-4">
             <div className="flex flex-col md:flex-row gap-4">
                 <Input
                     placeholder="Username"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange({ username: e.target.value })}
+                    onChange={(e) => handleSearchChange({ username: e.target.value })}
                 />
                 <div className="flex flex-row items-center gap-2 md:gap-4">
                     <Input
                         type='number'
                         placeholder="Min ELO"
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange({ minEloRating: e.target.value })} />
+                        onChange={(e) => handleSearchChange({ minEloRating: e.target.value })} />
                     <Input
                         type="number"
                         placeholder="Max ELO"
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange({ maxEloRating: e.target.value })} />
+                        onChange={(e) => handleSearchChange({ maxEloRating: e.target.value })} />
                 </div>
-
                 <Button onClick={handleSearch}>Search</Button>
             </div>
 
-
             {rankingQuery.isLoading ? (
-                <div className="flex w-full h-full p-10 justify-center items-center">
-                    <Loader />
-                </div>
+                <Loader />
             ) : rankingQuery.data ? (
                 <div className="w-full md:p-10">
                     <div className="flex justify-center mb-4">
                         <PageButtons
-                            page={rankingQuery.data?.currentPage || 1}
-                            totalPages={rankingQuery.data?.totalPages || 1}
+                            page={rankingQuery.data.currentPage || 1}
+                            totalPages={rankingQuery.data.totalPages || 1}
                             setPage={setPage} />
                     </div>
-                    {rankingQuery.data.items.map((player: IUserProfileResponse) => (
-                        <div key={player._id} className="grid grid-cols-3 items-center border-b border-gray-800 dark:border-gray-200 p-4">
-                            <span className="justify-self-start font-semibold">{player.username}</span>
-                            <span className="justify-self-start font-semibold"> {Math.floor(player.eloRating)}</span>
-                        </div>
-                    ))}
+                    <table className="w-[80%] md:w-[50%] divide-y">
+                        <thead>
+                            <tr className="border-y border-gray-800 dark:border-gray-200">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">Place</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Username</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ELO</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                            {rankingQuery.data.items.map((player: IUserProfileResponse) => (
+                                <tr key={player._id}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium ">
+                                        {player.rankingPlace && (
+                                            <>
+                                                {player.rankingPlace}
+                                                {player.rankingPlace <= 3 && (
+                                                    <FaTrophy className={`ml-2 text-${player.rankingPlace === 1 ? 'gold' : player.rankingPlace === 2 ? 'silver' : 'bronze'}-400`} />
+                                                )}
+                                            </>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm ">{player.username}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm ">{Math.floor(player.eloRating)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             ) : null}
         </div>

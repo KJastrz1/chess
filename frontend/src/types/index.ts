@@ -71,6 +71,7 @@ export type IUserProfileResponse = {
     _id: string;
     username: string;
     eloRating: number;
+    rankingPlace?: number;
 };
 
 export type IRankingParams = {

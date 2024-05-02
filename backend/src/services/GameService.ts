@@ -53,8 +53,6 @@ export async function buildGamesQuery(params: IGameParams, schemaPaths: any, req
             }
         }
     }
-
-    console.log("query", query)
     return query;
 }
 
@@ -116,7 +114,6 @@ export async function buildGameHistoryQuery(params: IGameHistoryParams, schemaPa
         }
     }
 
-    console.log("Game History Query", query);
     return query;
 }
 

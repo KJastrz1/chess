@@ -61,7 +61,8 @@ export async function getRankingPaginated(params: IRankingParams) {
     const players: IUserProfileResponse[] = users.map(user => ({
         _id: user._id.toString(),
         username: user.username,
-        eloRating: user.eloRating
+        eloRating: user.eloRating,
+        rankingPlace: user.rankingPlace
     }));
   
     const result: IPaginetedResult<IUserProfileResponse> = {
@@ -73,3 +74,17 @@ export async function getRankingPaginated(params: IRankingParams) {
 
     return result;
 }
+
+export async function updateRankings() {
+    try {      
+      const users = await User.find({}).sort({ eloRating: -1 }).exec();  
+    
+      for (let i = 0; i < users.length; i++) {
+        users[i].rankingPlace = i + 1; 
+        await users[i].save();
+      }
+    } catch (error) {
+      console.error('Error updating user rankings:', error);
+    }
+  }
+  

@@ -10,6 +10,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import http from 'http';
 import { Server } from "socket.io"; 
+import { startCronJobs } from './services/scheduler';
 
 connectDB();
 
@@ -35,7 +36,7 @@ app.use('/api/v1', userRoutes);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-
+startCronJobs();
 
 //SOCKET
 const server = http.createServer(app);

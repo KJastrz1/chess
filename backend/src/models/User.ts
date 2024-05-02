@@ -5,6 +5,7 @@ export interface IUserModel extends Document {
   _id: Types.ObjectId;
   username: string;
   eloRating: number;
+  rankingPlace: number;
   email: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -23,6 +24,10 @@ const userSchema: Schema = new mongoose.Schema({
   eloRating: {
     type: Number,
     default: 1200,
+  },
+  rankingPlace: {
+    type: Number,
+    default: null,
   },
   email: {
     type: String,

@@ -146,7 +146,7 @@ export interface GetRankingRequest extends AuthenticatedRequest {
     query: IRankingParams;
 }
 export async function getRanking(req: GetRankingRequest, res: Response) {
-    try {
+    try {       
         const result = await getRankingPaginated(req.query);
         res.json(result);
     }

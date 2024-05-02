@@ -33,6 +33,9 @@ module.exports = {
         'light-2': '#EFEFEF',
         'light-3': '#7878A3',
         'light-4': '#5C5C7B',
+        'gold': '#ffd700',  
+        'silver': '#c0c0c0',
+        'bronze': '#cd7f32'  
       },
       screens: {
         'xs': '480px',
