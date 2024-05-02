@@ -100,13 +100,14 @@ export type IPaginetedResult<T> = {
 //================================================
 // GAME TYPES
 //================================================
-export type IGame = {
+export type IGameResponse = {
     _id: string;
     player1: IUserProfileResponse;
     player2: IUserProfileResponse | null;
     board: ChessSquare[][];
     whitePlayer: string;
     whosMove: string;
+    whoIsInCheck: string | null;
     moveTime: number;
     moves: IMove[];
     status: GameStatus;

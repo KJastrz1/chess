@@ -5,7 +5,7 @@ import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
 import Select from "@/components/Ui/Select";
-import { GameStatus, IGame, IGameHistoryParams } from "@/types";
+import { GameStatus, IGameResponse, IGameHistoryParams } from "@/types";
 import { useUserContext } from "@/context/AuthContext";
 
 const GameHistory = () => {
@@ -30,11 +30,11 @@ const GameHistory = () => {
         handleSearchChange({ result: newResult });
     };
 
-    const getOpponentUsername = (game: IGame) => {
+    const getOpponentUsername = (game: IGameResponse) => {
         return game.player1 && game.player1._id !== user._id ? game.player1.username : game.player2 ? game.player2.username : 'Unknown';
     };
 
-    const getGameResult = (game: IGame) => {
+    const getGameResult = (game: IGameResponse) => {
         if (game.winner === null) {
             return 'Draw';
         }
@@ -66,7 +66,7 @@ const GameHistory = () => {
                 </div>
             ) : gamesQuery.data ? (
                 <div className="w-full md:p-10 ">
-                    {gamesQuery.data.map((game: IGame) => (
+                    {gamesQuery.data.map((game: IGameResponse) => (
                         <div key={game._id} className="grid grid-cols-3 items-center border-b border-gray-800 dark:border-gray-200 p-4">
                             <span className="justify-self-start">vs. {getOpponentUsername(game)}</span>
                             {getGameResult(game) === 'Won' ?

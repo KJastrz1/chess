@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import { Game } from '@src/models/Game';
-import { IGame, IGameHistoryParams, IGameParams } from '@src/types/index';
+import { IGameResponse, IGameHistoryParams, IGameParams } from '@src/types/index';
 import { AuthenticatedRequest } from '@src/types/express';
 import { buildGameHistoryQuery, buildGamesQuery } from '@src/services/GameService';
 
@@ -65,7 +65,7 @@ export const getGameById = async (req: GetGameByIdRequest, res: Response): Promi
 };
 
 export interface UpdateGameRequest extends AuthenticatedRequest {
-    game: IGame;
+    game: IGameResponse;
 }
 export const updateGame = async (req: UpdateGameRequest, res: Response): Promise<void> => {
     try {

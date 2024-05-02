@@ -104,7 +104,7 @@ export function isRookMovePossible(board: ChessSquare[][], move: IMove, opponent
 }
 
 export function isQueenMovePossible(board: ChessSquare[][], move: IMove, opponent: "w" | "b"): boolean {
-   
+
     return isRookMovePossible(board, move, opponent) || isBishopMovePossible(board, move, opponent);
 }
 
@@ -115,6 +115,7 @@ export function isKingMovePossible(board: ChessSquare[][], move: IMove, opponent
     const destinationPiece = board[destRow][destCol];
     return destinationPiece === 'None' || destinationPiece[0] === opponent;
 }
+
 
 export function findKingPosition(board: ChessSquare[][], player: "White" | "Black") {
     const kingSymbol = player === 'White' ? 'wk' : 'bk';
@@ -198,7 +199,7 @@ export function isAttackedByLineMover(board: ChessSquare[][], destRow: number, d
     return false;
 }
 
-export function doesMoveCauseOwnCheck(board: ChessSquare[][],move:IMove, player: "White" | "Black") {
+export function doesMoveCauseOwnCheck(board: ChessSquare[][], move: IMove, player: "White" | "Black") {
     const { srcRow, srcCol, destRow, destCol } = move;
     const pieceAtSource = board[srcRow][srcCol];
     const pieceAtDestination = board[destRow][destCol];
@@ -221,3 +222,33 @@ export function doesMoveCauseOwnCheck(board: ChessSquare[][],move:IMove, player:
     return isInCheck;
 }
 
+export function isCheck(board: ChessSquare[][], player: "White" | "Black"): boolean {
+    const kingPosition = findKingPosition(board, player);
+    if (!kingPosition) {
+        throw new Error('King not found');
+    }
+    const opponent = player === 'White' ? 'b' : 'w';
+    return isSquareAttackedByOpponent(board, kingPosition.row, kingPosition.col, opponent);
+}
+
+export function isCheckmate(board: ChessSquare[][], player: "White" | "Black"): boolean {
+    if (!isCheck(board, player)) {
+        return false;
+    }
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = board[row][col];
+            if (piece !== 'None' && piece[0] === (player === 'White' ? 'w' : 'b')) {
+                for (let destRow = 0; destRow < 8; destRow++) {
+                    for (let destCol = 0; destCol < 8; destCol++) {
+                        const move:IMove = { srcRow: row, srcCol: col, destRow: destRow, destCol: destCol, figure: piece};
+                        if (isMovePossible(board, move, player) && !doesMoveCauseOwnCheck(board, move, player)) {
+                            return false; 
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}

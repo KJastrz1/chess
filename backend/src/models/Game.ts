@@ -8,6 +8,7 @@ export interface IGameModel extends Document {
     whitePlayer: Types.ObjectId;
     whosMove: Types.ObjectId;
     moveTime: number;
+    whoIsInCheck: Types.ObjectId | null;
     timer?: NodeJS.Timeout|null;
     moves: IMove[];
     status: GameStatus;

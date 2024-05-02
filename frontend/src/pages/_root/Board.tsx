@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
-import { ChessSquare, GameStatus, IGame, IMove, PossibleMove, SelectedPiece, White } from '@/types';
+import { ChessSquare, GameStatus, IGameResponse, IMove, PossibleMove, SelectedPiece, White } from '@/types';
 import Loader from '@/components/Ui/Loader';
 import { useGetWebSocketToken } from '@/lib/queries';
 import { calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '@/logic/chessLogic';
@@ -22,7 +22,7 @@ function Board() {
   const { user } = useUserContext();
   const [isWhitePlayer, setIsWhitePlayer] = useState(false);
   const [isPlayerTurn, setIsPlayerTurn] = useState(false);
-  const [game, setGame] = useState<IGame | null>(null);
+  const [game, setGame] = useState<IGameResponse | null>(null);
   const [opponentLeft, setOpponentLeft] = useState(false);
   const [moveTimer, setMoveTimer] = useState<NodeJS.Timeout | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
@@ -56,7 +56,7 @@ function Board() {
         });
       });
 
-      socket.on('receiveGame', (receivedGame: IGame) => {
+      socket.on('receiveGame', (receivedGame: IGameResponse) => {
         console.log("receivedGame", receivedGame)
         setGame(receivedGame);
         setMoveTimeMessage('Time limit set to: ' + receivedGame.moveTime + ' seconds');
@@ -69,7 +69,7 @@ function Board() {
 
       socket.on('timeOut', (newTurnObject: { newTurn: string }) => {
         setIsPlayerTurn(newTurnObject.newTurn === user._id);
-        console.log('timeOut');
+        // console.log('timeOut');
       });
 
       socket.on('playerLeft', () => {
@@ -84,7 +84,7 @@ function Board() {
   useEffect(() => {
     if (game && game.status === GameStatus.InProgress) {
       startTimer(game.moveTime);
-      console.log('starting timer again for game', game._id);
+      // console.log('starting timer again for game', game._id);
     }
   }, [game, isPlayerTurn]);
 
@@ -163,6 +163,16 @@ function Board() {
         {renderBoard()}
       </div>
       <div className="flex flex-col justify-center">
+        {!game.winner && game.whoIsInCheck && (
+          <div className={`text-xl font-semibold ${game.whoIsInCheck === user._id ? 'text-red-500' : 'text-yellow-500'}`}>
+            {game.whoIsInCheck === user._id ? 'You are in check!' : 'Opponent is in check!'}
+          </div>
+        )}
+        {game.winner && (
+          <div className={`text-xl font-semibold ${game.winner === user._id ? 'text-green-500' : 'text-red-500'}`}>
+            {game.winner === user._id ? 'You won!' : 'You lost!'}
+          </div>
+        )}
         {opponentLeft && (
           <div className="text-xl font-semibold text-red">Opponent has left the game! You won!</div>
         )}

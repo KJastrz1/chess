@@ -2,9 +2,9 @@
 import jwt from 'jsonwebtoken';
 import { Game, IGameModel } from './models/Game';
 import { IUserModel, User } from './models/User';
-import { GameStatus, IMove } from './types';
+import { GameStatus, IGameResponse, IMove } from './types';
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { isMovePossible } from './utils/chessLogic';
+import { isCheck, isCheckmate, isMovePossible } from './utils/chessLogic';
 import { updateEloRating } from './services/UserService';
 
 
@@ -110,44 +110,59 @@ export default (io: SocketIOServer) => {
             console.log("ruch od gracza", socket.data.user._id)
             const game: IGameModel | null = gamesState[gameId];
             if (!game) {
-                console.log('Gra nie znaleziona');
-                cb('Game not found');
+                console.log('Gra nie znaleziona');                
                 return;
             }
             if (game.player1.toString() !== playerId
                 && game.player2.toString() !== playerId) {
-                console.log('Gracz nie należy do gry');
-                cb('Player not assigned to this game');
+                console.log('Gracz nie należy do gry');              
                 return;
             }
             if (game.whosMove.toString() !== socket.data.user._id.toString()) {
-                console.log('Not your turn');
-                cb('Not your turn');
+                console.log('Not your turn');               
                 return;
             }
 
             const player = game.whitePlayer.toString() === socket.data.user._id.toString() ? 'White' : 'Black';
 
+            if (isCheckmate(game.board, player)) {
+                game.winner = player === 'White' ? game.player2 : game.player1;
+                game.status = GameStatus.Finished;
+                delete gamesState[gameId];
+                io.to(gameId).emit('receiveGame', game);
+                clearMoveTimer(gameId);
+                return;
+            }
             if (!isMovePossible(game.board, move, player)) {
-                console.log('Ruch niemożliwy');
-                cb('Invalid move');
+                console.log('Ruch niemożliwy');                
                 return;
             }
             game.board[move.destRow][move.destCol] = game.board[move.srcRow][move.srcCol];
             game.board[move.srcRow][move.srcCol] = 'None';
             game.moves.push(move);
 
+            if (isCheck(game.board, player)) {
+                game.whoIsInCheck = game.whosMove;
+            } else {
+                game.whoIsInCheck = null;
+            }
             game.whosMove = game.whosMove.toString() === game.player1.toString() ? game.player2 : game.player1;
 
             gamesState[gameId] = game;
-            const gameToSend = {
+            const gameToSend: IGameResponse = {
                 ...game.toObject(),
                 player1Connected: game.player1Connected,
-                player2Connected: game.player2Connected
+                player2Connected: game.player2Connected,
+                whoIsInCheck: game.whoIsInCheck ? game.whoIsInCheck.toString() : null,
             };
             clearMoveTimer(gameId);
             startMoveTimer(gameId, game.moveTime);
-            socket.to(gameId).emit('receiveGame', gameToSend);
+            if (game.whoIsInCheck) {
+                io.to(gameId).emit('receiveGame', gameToSend);
+                console.log('Szach',gameToSend);
+            } else {
+                socket.to(gameId).emit('receiveGame', gameToSend);
+            }
         })
 
         socket.on('changeMoveTime', async (moveTime: number, cb: (message: string) => void) => {
