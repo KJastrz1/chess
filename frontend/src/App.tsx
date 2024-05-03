@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom"
 import Board from "./pages/_root/Board"
-import Home from "./pages/_root/Home"
+import Play from "./pages/_root/Play"
 import LoginPage from "./pages/_auth/LoginPage"
 import RegisterPage from "./pages/_auth/RegisterPage"
 import AuthLayout from "./pages/_auth/AuthLayout"
@@ -20,7 +20,7 @@ const App = () => {
         </Route>
 
         <Route element={<RootLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Play />} />
           <Route path="/game/:id" element={<Board />} />
           <Route path="/history" element={<GameHistory />} />
           <Route path="/history/:id" element={<RewindGame />} />

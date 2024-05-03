@@ -1,5 +1,5 @@
 import axios from "axios";
-import { GameStatus, IGameHistoryParams, IGameHistoryParamsFrontend, IGameParams, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from '@/types';
+import { GameStatus, IGameHistoryParams, IGameHistoryParamsFrontend, IGameParams, IGameParamsFrontend, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
@@ -87,7 +87,7 @@ export async function getGameById(gameId: string) {
     }
 }
 
-export async function getGames(params: IGameParams) {
+export async function getGames(params: IGameParamsFrontend) {
     try {
         const response = await axios.get(`${API_URL}/games`, { params });
         return response.data;

@@ -36,40 +36,40 @@ paths:
         - Games
       parameters:
         - in: query
-          name: player1
+          name: player1         
           schema:
             type: string
           description: Player 1 ID to filter by
         - in: query
-          name: player2
+          name: player2        
           schema:
             type: string
           description: Player 2 ID to filter by
         - in: query
-          name: status
-          schema:
-            type: string
-            enum:
-              - waiting_for_player2
-              - waiting_for_start
-              - in_progress
-              - finished
-          description: Game status to filter by
-        - in: query
-          name: moveTime
+          name: moveTime      
           schema:
             type: number
           description: Move time to filter by
         - in: query
-          name: winner
-          schema:
-            type: string
-          description: Winner ID to filter by
-        - in: query
-          name: player1Username
+          name: player1Username     
           schema:
             type: string
           description: Player1 Username to filter by
+        - in: query
+          name: player2Username          
+          schema:
+            type: string
+          description: Player2 Username to filter by
+        - in: query
+          name: page          
+          schema:
+            type: number
+          description: Page number of the games to retrieve
+        - in: query
+          name: itemsPerPage          
+          schema:
+            type: number
+          description: Number of games per page
       responses:
         200:
           description: A list of games
@@ -173,14 +173,12 @@ paths:
               - draw
           description: Filter by game result relative to the authenticated user
         - in: query
-          name: page
-          required: false
+          name: page          
           schema:
             type: string
           description: Page number of the rankings to retrieve
         - in: query
-          name: itemsPerPage
-          required: false
+          name: itemsPerPage          
           schema:
             type: string
           description: Number of ranking items per page

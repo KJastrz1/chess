@@ -4,8 +4,8 @@ import { IUserModel } from './User';
 
 export interface IGameModel extends Document {
     _id: Types.ObjectId;
-    player1: Types.ObjectId;
-    player2: Types.ObjectId;
+    player1: IUserModel;
+    player2: IUserModel|null;
     whitePlayer: Types.ObjectId;
     whosMove: Types.ObjectId;
     moveTime: number;
