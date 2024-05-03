@@ -6,7 +6,7 @@ import Button from '@/components/Ui/Button';
 import { useUserContext } from '@/context/AuthContext';
 import TextField from '@/components/Ui/FormikField';
 import { Link } from 'react-router-dom';
-import { ILoginUserRequest } from '@/types';
+import { Black, ILoginUserRequest, White } from '@/types';
 
 const loginValidationSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email address').required('Email is required'),
@@ -17,10 +17,17 @@ const LoginPage = () => {
   const { mutateAsync: signin } = useSignInAccount();
   const { login } = useUserContext();
   return (
-    <div>
+    <div>      
+      <a href="/">
+        <div className="flex flex-row gap-3 mb-8">
+          <img src={`assets/figures/${Black.Queen}.svg`} className="h-20 block dark:hidden" alt="CheckMate Logo" />
+          <img src={`assets/figures/${White.Queen}.svg`} className="h-20 hidden dark:block" alt="CheckMate Logo" />
+          <span className="self-center text-3xl lg:text-4xl font-semibold whitespace-nowrap">CheckMate</span>
+        </div>
+      </a>
       <h2 className='text-3xl mb-5'>Login</h2>
       <Formik<ILoginUserRequest>
-        initialValues={{ email: '', password: ''}}
+        initialValues={{ email: '', password: '' }}
         validationSchema={loginValidationSchema}
         onSubmit={async (values, { setSubmitting }) => {
           setSubmitting(true);

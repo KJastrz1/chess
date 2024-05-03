@@ -6,23 +6,20 @@ import Navbar from '@/shared/NavBar';
 const RootLayout = () => {
     const { isAuthenticated, isLoading } = useUserContext();
 
-    if (isLoading) {
-        console.log('loading user');
+    if (isLoading) {        
         return <Loader />;
     }
 
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated) {        
         return <Navigate to="/login" />;
     }
 
 
     return (
         <div className="w-full h-full">
-            <Navbar />
-           
-            <Outlet />
-        
+            <Navbar />           
+            <Outlet />        
         </div>
     );
 };

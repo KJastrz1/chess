@@ -1,102 +1,101 @@
-import React, { useState } from "react";
-import { useGetGamesHistory } from "../../lib/queries";
-import { useNavigate } from "react-router-dom";
-import Input from "@/components/Ui/Input";
-import Loader from "@/components/Ui/Loader";
-import Button from "@/components/Ui/Button";
-import Select from "@/components/Ui/Select";
-import { GameStatus, IGameResponse, IGameHistoryParamsFrontend } from "@/types";
-import { useUserContext } from "@/context/AuthContext";
-import PageButtons from "@/components/Ui/PageButtons";
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import Loader from '@/components/Ui/Loader';
+import Square from '@/shared/Square';
+import { ChessSquare, IGameResponse, IUserProfileResponse, initialBoard } from '@/types';
+import { useGetGameById } from '@/lib/queries';
+import Button from '@/components/Ui/Button';
+import { useUserContext } from '@/context/AuthContext';
+import Input from '@/components/Ui/Input';
 
 const GameHistory = () => {
-    const { user } = useUserContext();
-    const navigate = useNavigate();
-    const [gameResult, setGameResult] = useState("");
-    const [tempParams, setTempParams] = useState<IGameHistoryParamsFrontend>({ status: GameStatus.Finished, page: 1, itemsPerPage: 20 });
-    const [params, setParams] = useState<IGameHistoryParamsFrontend>({ status: GameStatus.Finished, page: 1, itemsPerPage: 20 });
-    const gamesQuery = useGetGamesHistory(params);
+  const { user } = useUserContext();
+  const { id: gameId } = useParams<{ id: string }>();
+  const gameQuery = useGetGameById(gameId as string, true);
+  const [game, setGame] = useState<IGameResponse | null>(null);
+  const [currentMove, setCurrentMove] = useState(0);
+  const [currentBoard, setCurrentBoard] = useState<ChessSquare[][]>([]);
 
-    const handleSearchChange = (newParams: Partial<IGameHistoryParamsFrontend>) => {
-        setTempParams(prev => ({ ...prev, ...newParams }));
-    };
 
-    const handleSearch = () => {
-        setParams(tempParams);
-    };
 
-    const handleResultChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const newResult = event.target.value;
-        setGameResult(newResult);
-        handleSearchChange({ result: newResult });
-    };
-
-    const setPage = (page: number) => {
-        handleSearchChange({ page });
-    };
-
-    const getOpponentUsername = (game: IGameResponse) => {
-        return game.player1 && game.player1._id !== user._id ? game.player1.username : game.player2 ? game.player2.username : 'Unknown';
-    };
-
-    const getGameResult = (game: IGameResponse) => {
-        if (game.winner === null) {
-            return 'Draw';
-        }
-        if (game.winner === user._id) {
-            return 'Won';
-        }
-        return 'Lost';
+  useEffect(() => {
+    if (gameQuery.data) {
+      setGame(gameQuery.data);
+      setCurrentBoard(gameQuery.data.board);
+      console.log("moves len", gameQuery.data.moves.length)
     }
+  }, [gameQuery.data]);
 
-    return (
-        <div className="flex flex-col w-full items-center p-4 gap-8">
-            <div className="flex flex-col md:flex-row gap-4">
-                <Input
-                    placeholder="Opponent username"
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange({ opponentUsername: e.target.value })}
-                />
-                <Select id="gameResult" value={gameResult} onChange={handleResultChange}>
-                    <option value="">Any result</option>
-                    <option value="won">Won</option>
-                    <option value="lost">Lost</option>
-                    <option value="draw">Draw</option>
-                </Select>
-                <Button onClick={handleSearch}>Search</Button>
-            </div>
+  useEffect(() => {
+    if (game) {
+      const newBoard = JSON.parse(JSON.stringify(initialBoard));
+      game.moves.slice(0, currentMove).forEach(move => {
+        console.log("move", move)
+        newBoard[move.destRow][move.destCol] = newBoard[move.srcRow][move.srcCol];
+        newBoard[move.srcRow][move.srcCol] = 'None';
+      });
+      setCurrentBoard(newBoard);
+      console.log(currentBoard)
+    }
+  }, [currentMove, game]);
 
-            {gamesQuery.isLoading ? (
-                <div className="flex w-full h-full p-10 justify-center items-center">
-                    <Loader />
-                </div>
-            ) : gamesQuery.data ? (
-                < >
-                    <div className="flex justify-center">
-                        <PageButtons
-                            page={gamesQuery.data.currentPage || 1}
-                            totalPages={gamesQuery.data.totalPages || 1}
-                            setPage={setPage} />
-                    </div>
-                    {gamesQuery.data.items.map((game: IGameResponse) => (
-                        <div key={game._id} className="md:w-[70%] grid grid-cols-3 items-center border-b border-gray-800 dark:border-gray-200 p-4">
-                            <span className="justify-self-start">vs. {getOpponentUsername(game)}</span>
-                            {getGameResult(game) === 'Won' ?
-                                <span className="justify-self-center text-green-500">{getGameResult(game)}</span>
-                                : getGameResult(game) === 'Lost' ?
-                                    <span className="justify-self-center text-rose-500">{getGameResult(game)}</span>
-                                    : <span className="justify-self-center text-white">{getGameResult(game)}</span>
-                            }
-                            <span className="justify-self-end">
-                                <Button onClick={() => navigate(`/history/${game._id}`)}>
-                                    Show Game
-                                </Button>
-                            </span>
-                        </div>
-                    ))}
-                </>
-            ) : null}
-        </div>
+  if (!game) {
+    return <Loader />;
+  }
+
+  const handlePrevMove = () => {
+    setCurrentMove(current => Math.max(0, current - 1));
+  };
+
+  const handleNextMove = () => {
+    setCurrentMove(current => Math.min(game.moves.length, current + 1));
+  };
+
+  const renderBoard = (): JSX.Element[][] => {
+    return currentBoard.map((row, rowIndex) =>
+      row.map((figure, colIndex) => (
+        <Square
+          key={`${rowIndex}-${colIndex}`}
+          isWhite={(rowIndex + colIndex) % 2 === 0}
+          figure={figure}
+          row={rowIndex}
+          col={colIndex}
+        />
+      ))
     );
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row justify-start items-center gap-4 h-full w-full py-2 px-2 md:px-4">
+      <div className="grid grid-cols-8 gap-0">
+        {renderBoard()}
+      </div>
+      <div className='flex flex-col justify-center items-center gap-3'>
+        <p>
+          Game against{' '}
+          <span className="font-semibold">
+            {game.player1._id === user._id ? (game.player2 as IUserProfileResponse).username : game.player1.username}
+          </span>
+        </p>
+        <p>
+          You were playing {game.whitePlayer === user._id ? 'white' : 'black'}
+        </p>
+        <Input
+          type="range"
+          min="0"
+          max={game.moves.length}
+          value={currentMove}
+          onChange={(e) => setCurrentMove(Number(e.target.value))}
+          className="w-full m-0"
+        />
+        <div className='flex flex-row gap-3 items-center'>
+          <Button onClick={handlePrevMove} disabled={currentMove === 0}>Previous</Button>
+          {currentMove} / {game.moves.length}
+          <Button onClick={handleNextMove} disabled={currentMove === game.moves.length}>Next</Button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default GameHistory;

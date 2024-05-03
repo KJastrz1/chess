@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "react-query";
 import { QUERY_KEYS } from "./keysQuery";
-import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, getWebSocketToken,  signInAccount, getGamesHistory, getRanking } from "./api";
+import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, getWebSocketToken, signInAccount, getGamesHistory, getRanking } from "./api";
 import { IGameHistoryParams, IGameHistoryParamsFrontend, IGameParams, IGameParamsFrontend, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from "@/types";
 import { toast } from "react-toastify";
 
@@ -93,11 +93,12 @@ export const useGetGamesHistory = (params: IGameHistoryParamsFrontend) => {
     });
 }
 
-export const useGetGameById = (gameId: string) => {
+export const useGetGameById = (gameId: string, noRefetch?: boolean) => {
     return useQuery({
         queryKey: [QUERY_KEYS.GET_GAME_BY_ID, gameId],
         queryFn: () => getGameById(gameId),
         enabled: !!gameId,
+        staleTime: noRefetch ? Infinity : 0,
         onError: (error: Error) => {
             toast.error(error.message);
             return;

@@ -46,8 +46,8 @@ export const getGameById = async (req: GetGameByIdRequest, res: Response): Promi
     }
     try {
         const game = await Game.findById(id)
-            .populate('player1', 'username')
-            .populate('player2', 'username');
+            .populate('player1', 'username eloRating rankingPlace')
+            .populate('player2', 'username eloRating rankingPlace');
         if (!game) {
             res.status(404).json({ message: 'Game not found' });
             return;

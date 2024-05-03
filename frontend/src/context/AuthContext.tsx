@@ -32,17 +32,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const navigate = useNavigate();
     const [user, setUser] = useState<IUser>(initialUser);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const checkAuthUser = async () => {
-        setIsLoading(true);
-    
+    const checkAuthUser = async () => {    
+        console.log("checking auth user")
+
         try {
-            const data = await getCurrentUser();        
+            const data = await getCurrentUser();
             if (data) {
-                setUser(data);
-                setIsAuthenticated(true);
-                navigate('/');
+                login(data);
                 return true;
             }
             navigate("/login");
@@ -68,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
     const logout = async () => {
-        const data=await logoutUser();       
+        await logoutUser();
         setUser(initialUser);
         setIsAuthenticated(false);
         navigate('/login');
