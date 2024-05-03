@@ -4,7 +4,7 @@ import connectDB from './config/db';
 import swaggerUi from 'swagger-ui-express';
 import gameRoutes from './routes/GameRoutes';
 import userRoutes from './routes/UserRoutes';
-import setupSocket from './socket';
+// import setupSocket from './socket';
 import swaggerDocs from './config/swagger';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -49,7 +49,7 @@ const io = new Server(server, {
   }
 });
 
-setupSocket(io);
+// setupSocket(io);
 
 
 

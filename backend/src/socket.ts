@@ -44,7 +44,7 @@ export default (io: SocketIOServer) => {
     io.on('connection', (socket: Socket) => {
         socket.on('joinGame', async (gameId: string, cb: (message: string) => void) => {
             try {
-                const playerId = socket.data.user._id.toString();
+                const playerId: string = socket.data.user._id.toString();
                 if (disconnectionTimers[playerId]) {
                     clearTimeout(disconnectionTimers[playerId]);
                     delete disconnectionTimers[playerId];
@@ -64,9 +64,13 @@ export default (io: SocketIOServer) => {
                 }
                 if (game.player1.toString() !== playerId
                     && game.status === GameStatus.WaitingForPlayer2) {
-                    game.player2 = socket.data.user._id;
+                    game.player2 = await User.findById(socket.data.user._id);
+                    if (!game.player2) {
+                        console.log('Gracz nie znaleziony');
+                        return;
+                    }
                     console.log('Gracz dolaczyl do gry jako drugi');
-                    const players = [game.player1, game.player2];
+                    const players = [game.player1._id, game.player2._id];
                     const whitePlayerIndex = Math.floor(Math.random() * players.length);
                     game.whitePlayer = players[whitePlayerIndex];
                     game.whosMove = game.whitePlayer;
@@ -85,7 +89,7 @@ export default (io: SocketIOServer) => {
                 if (game.player1.toString() === playerId) {
                     game.player1Connected = true;
                 }
-                if (game.status !== GameStatus.WaitingForPlayer2 && game.player2.toString() === playerId) {
+                if (game.status !== GameStatus.WaitingForPlayer2 && game.player2 && game.player2.toString() === playerId) {
                     game.player2Connected = true;
                 }
 
@@ -106,15 +110,19 @@ export default (io: SocketIOServer) => {
         });
 
         socket.on('sendMove', async (move: IMove, gameId: string, cb: (message: string) => void) => {
-            const playerId = socket.data.user._id.toString();
+            const playerId: string = socket.data.user._id.toString();
             console.log("ruch od gracza", socket.data.user._id)
             const game: IGameModel | null = gamesState[gameId];
             if (!game) {
                 console.log('Gra nie znaleziona');
                 return;
             }
-            if (game.player1.toString() !== playerId
-                && game.player2.toString() !== playerId) {
+            if (!game.player2) {
+                console.log('Player 2 jest null');
+                return;
+            }
+            if (game.player1._id.toString() !== playerId
+                && game.player2._id.toString() !== playerId) {
                 console.log('Gracz nie należy do gry');
                 return;
             }
@@ -127,7 +135,7 @@ export default (io: SocketIOServer) => {
             const opponent = player === 'White' ? 'Black' : 'White';
 
             if (isCheckmate(game.board, player)) {
-                game.winner = player === 'White' ? game.player2 : game.player1;
+                game.winner = player === 'White' ? game.player2._id : game.player1._id;
                 game.status = GameStatus.Finished;
                 delete gamesState[gameId];
                 io.to(gameId).emit('receiveGame', game);
@@ -141,7 +149,7 @@ export default (io: SocketIOServer) => {
             game.board[move.destRow][move.destCol] = game.board[move.srcRow][move.srcCol];
             game.board[move.srcRow][move.srcCol] = 'None';
             game.moves.push(move);
-            game.whosMove = game.whosMove.toString() === game.player1.toString() ? game.player2 : game.player1;
+            game.whosMove = game.whosMove.toString() === game.player1._id.toString() ? game.player2._id : game.player1._id;
 
             if (isCheck(game.board, opponent)) {
                 game.whoIsInCheck = game.whosMove;
@@ -203,12 +211,14 @@ export default (io: SocketIOServer) => {
 
             const gameId = socket.data.gameId;
             const game = gamesState[gameId];
-            if (!gameId || !gamesState[gameId]) {
+
+            if (!gameId || !game.player2 || !gamesState[gameId]) {
                 return;
             }
 
-            const playerId = socket.data.user._id.toString();
-            if (game.status === GameStatus.WaitingForStart && playerId === game.player2.toString()) {
+
+            const playerId: string = socket.data.user._id.toString();
+            if (game.status === GameStatus.WaitingForStart && playerId === game.player2._id.toString()) {
                 game.status = GameStatus.WaitingForPlayer2;
                 game.player2Connected = false;
                 socket.to(gameId).emit('receiveGame', game);
@@ -220,9 +230,10 @@ export default (io: SocketIOServer) => {
                 disconnectionTimers[playerId] = setTimeout(async () => {
                     socket.to(gameId).emit('playerLeft');
 
-                    game.winner = game.player1.toString() === playerId ? game.player2 : game.player1;
+                    game.winner = game.player1.toString() === playerId ? (game.player2 as IUserModel)._id : game.player1._id;
+
                     game.status = GameStatus.Finished;
-                    const loser = game.player1.toString() === playerId ? game.player1 : game.player2;
+                    const loser = game.player1.toString() === playerId ? game.player1._id : (game.player2 as IUserModel)._id;
                     delete gamesState[gameId];
                     try {
                         await updateEloRating(game.winner, loser);
@@ -240,7 +251,7 @@ export default (io: SocketIOServer) => {
             const timeoutId = setTimeout(() => {
                 const game = gamesState[gameId];
                 if (game) {
-                    game.whosMove = game.whosMove.toString() === game.player1.toString() ? game.player2 : game.player1;
+                    game.whosMove = game.whosMove.toString() === game.player1._id.toString() ? (game.player2 as IUserModel)._id : game.player1._id;
                     console.log(`Czas na ruch minął, teraz kolej na: ${game.whosMove}`);
                     startMoveTimer(gameId, moveTime);
                     io.to(gameId).emit('timeOut', { newTurn: game.whosMove });

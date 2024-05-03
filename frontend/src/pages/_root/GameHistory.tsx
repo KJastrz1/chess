@@ -50,7 +50,7 @@ const GameHistory = () => {
     }
 
     return (
-        <div className="flex flex-col items-center p-4 gap-4">
+        <div className="flex flex-col w-full items-center p-4 gap-8">
             <div className="flex flex-col md:flex-row gap-4">
                 <Input
                     placeholder="Opponent username"
@@ -70,15 +70,15 @@ const GameHistory = () => {
                     <Loader />
                 </div>
             ) : gamesQuery.data ? (
-                <div className="w-full md:p-10 ">
-                    <div className="flex justify-center mb-4">
+                < >
+                    <div className="flex justify-center">
                         <PageButtons
                             page={gamesQuery.data.currentPage || 1}
                             totalPages={gamesQuery.data.totalPages || 1}
                             setPage={setPage} />
                     </div>
-                    {gamesQuery.data.map((game: IGameResponse) => (
-                        <div key={game._id} className="grid grid-cols-3 items-center border-b border-gray-800 dark:border-gray-200 p-4">
+                    {gamesQuery.data.items.map((game: IGameResponse) => (
+                        <div key={game._id} className="md:w-[70%] grid grid-cols-3 items-center border-b border-gray-800 dark:border-gray-200 p-4">
                             <span className="justify-self-start">vs. {getOpponentUsername(game)}</span>
                             {getGameResult(game) === 'Won' ?
                                 <span className="justify-self-center text-green-500">{getGameResult(game)}</span>
@@ -93,7 +93,7 @@ const GameHistory = () => {
                             </span>
                         </div>
                     ))}
-                </div>
+                </>
             ) : null}
         </div>
     );

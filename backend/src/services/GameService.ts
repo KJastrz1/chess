@@ -1,9 +1,41 @@
-import { GetGamesHistoryRequest } from '@src/controllers/GameController';
+import { GetGamesHistoryRequest, GetGamesRequest } from '@src/controllers/GameController';
 import { Game } from '@src/models/Game';
 import { IUserModel, User } from '@src/models/User';
-import { GameStatus, IGameHistoryItem, IGameHistoryParams, IGameParams, IPaginetedResult } from '@src/types';
+import { GameStatus, IGameHistoryItem, IGameHistoryParams, IGameListItem, IGameParams, IPaginetedResult, IUserProfileResponse } from '@src/types';
 import mongoose from 'mongoose';
 
+export async function getGamesPagineted(req: GetGamesRequest) {
+    try {
+        const page = parseInt(req.query.page || "1", 10);
+        const itemsPerPage = parseInt(req.query.itemsPerPage || "20", 10);
+
+        const query = await buildGamesQuery(req.query, Game.schema.paths, req.user);
+
+        const totalItems = await Game.countDocuments(query);
+        const games = await Game.find(query)
+            .populate('player1', 'username eloRating rankingPlace')
+            .populate('player2', 'username eloRating rankingPlace')
+            .skip((page - 1) * itemsPerPage)
+            .limit(itemsPerPage)
+            .sort({ createdAt: -1 });
+
+        const gamesResult: IGameListItem[] = games.map(game => ({
+            _id: game._id.toString(),
+            player1: (game.player1 as IUserModel).toObject() as IUserProfileResponse,              
+            moveTime: game.moveTime,           
+        }));
+        const result: IPaginetedResult<IGameListItem> = {
+            totalItems,
+            totalPages: Math.ceil(totalItems / itemsPerPage),
+            currentPage: page,
+            items: gamesResult
+        };
+
+        return result;
+    } catch (err) {
+        throw new Error(`An error occurred while retrieving games`);
+    }
+}
 export async function buildGamesQuery(params: IGameParams, schemaPaths: any, requestingUser: IUserModel) {
 
     const query: { [key: string]: any } = {};
@@ -67,26 +99,16 @@ export async function getGamesHistoryPaginated(req: GetGamesHistoryRequest) {
 
         const totalItems = await Game.countDocuments(query);
         const games = await Game.find(query)
-            .populate('player1', 'username eloRating')
-            .populate('player2', 'username eloRating')
+            .populate('player1', 'username eloRating rankingPlace')
+            .populate('player2', 'username eloRating rankingPlace')
             .skip((page - 1) * itemsPerPage)
             .limit(itemsPerPage)
             .sort({ createdAt: -1 });
 
         const gamesResult: IGameHistoryItem[] = games.map(game => ({
-            _id: game._id.toString(),
-            player1: {
-                _id: game.player1,
-                username: (game.player1 as IUserModel).username,
-                eloRating: (game.player1 as IUserModel).eloRating,
-                rankingPlace: (game.player1 as IUserModel).rankingPlace
-            },
-            player2: {
-                _id: (game.player2 as IUserModel)._id.toString(),
-                username: (game.player2 as IUserModel).username,
-                eloRating: (game.player2 as IUserModel).eloRating,
-                rankingPlace: (game.player2 as IUserModel).rankingPlace
-            },
+            _id: game._id.toString(),            
+            player1: (game.player2 as IUserModel).toObject() as IUserProfileResponse,       
+            player2: (game.player2 as IUserModel).toObject() as IUserProfileResponse,
             winner: game.winner ? game.winner.toString() : null,
             moveTime: game.moveTime,
             createdAt: game.createdAt.toISOString(),
@@ -106,6 +128,7 @@ export async function getGamesHistoryPaginated(req: GetGamesHistoryRequest) {
 
 async function buildGameHistoryPaginatedQuery(params: IGameHistoryParams, schemaPaths: any, requestingUser: IUserModel) {
     const query: { [key: string]: any } = { status: GameStatus.Finished };
+    query['player2'] = { $ne: null };
 
     if (params.result) {
         switch (params.result) {

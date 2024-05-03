@@ -121,11 +121,21 @@ export type IGameParams = {
     player2?: string;
     status: GameStatus.WaitingForPlayer2 | GameStatus.WaitingForStart;
     moveTime?: string;
-    winner?: string;
     player1Username?: string;
     player2Username?: string;
-    updatedAt?: string;
-    createdAt?: string;
+    page?: string;
+    itemsPerPage?: string;
+};
+
+export type IGameParamsFrontend = {
+    player1?: string;
+    player2?: string;
+    status: GameStatus.WaitingForPlayer2 | GameStatus.WaitingForStart;
+    moveTime?: number;
+    player1Username?: string;
+    player2Username?: string;
+    page?: number;
+    itemsPerPage?: number;
 };
 
 export type IGameHistoryParams = {

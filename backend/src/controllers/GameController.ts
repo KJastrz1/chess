@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { Game } from '@src/models/Game';
 import { IGameResponse, IGameHistoryParams, IGameParams } from '@src/types/index';
 import { AuthenticatedRequest } from '@src/types/express';
-import { buildGamesQuery, getGamesHistoryPaginated } from '@src/services/GameService';
+import { buildGamesQuery, getGamesHistoryPaginated, getGamesPagineted } from '@src/services/GameService';
 
 export const createGame = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
@@ -23,14 +23,8 @@ export interface GetGamesRequest extends AuthenticatedRequest {
 }
 export const getGames = async (req: GetGamesRequest, res: Response): Promise<void> => {
     try {
-
-        const query = await buildGamesQuery(req.query, Game.schema.paths, req.user);
-
-        const games = await Game.find(query)
-            .populate('player1', 'username eloRating')
-            .populate('player2', 'username eloRating');
-        
-        console.log("games", games);
+        const games = await getGamesPagineted(req);      
+       
         res.json(games);
     } catch (err) {
         console.error(err);
