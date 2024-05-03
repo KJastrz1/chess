@@ -77,6 +77,7 @@ function Board() {
       });
     }
     return () => {
+      console.log('disconnecting socket');
       socket?.disconnect();
     };
   }, [token]);
@@ -164,7 +165,7 @@ function Board() {
       </div>
       <div className="flex flex-col justify-center">
         {!game.winner && game.whoIsInCheck && (
-          <div className={`text-xl font-semibold ${game.whoIsInCheck === user._id ? 'text-red-500' : 'text-yellow-500'}`}>
+          <div className={`text-xl font-semibold ${game.whoIsInCheck === user._id ? 'text-rose-500' : 'text-yellow-500'}`}>
             {game.whoIsInCheck === user._id ? 'You are in check!' : 'Opponent is in check!'}
           </div>
         )}

@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { Game } from '@src/models/Game';
 import { IGameResponse, IGameHistoryParams, IGameParams } from '@src/types/index';
 import { AuthenticatedRequest } from '@src/types/express';
-import { buildGameHistoryQuery, buildGamesQuery } from '@src/services/GameService';
+import { buildGamesQuery, getGamesHistoryPaginated } from '@src/services/GameService';
 
 export const createGame = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
@@ -21,16 +21,16 @@ export const createGame = async (req: AuthenticatedRequest, res: Response): Prom
 export interface GetGamesRequest extends AuthenticatedRequest {
     query: IGameParams;
 }
-export const getGames = async (req: GetGamesRequest, res: Response): Promise<void> => {   
+export const getGames = async (req: GetGamesRequest, res: Response): Promise<void> => {
     try {
-      
+
         const query = await buildGamesQuery(req.query, Game.schema.paths, req.user);
 
         const games = await Game.find(query)
             .populate('player1', 'username eloRating')
             .populate('player2', 'username eloRating');
-
-        console.log("games", games.length);
+        
+        console.log("games", games);
         res.json(games);
     } catch (err) {
         console.error(err);
@@ -52,7 +52,7 @@ export const getGameById = async (req: GetGameByIdRequest, res: Response): Promi
     }
     try {
         const game = await Game.findById(id)
-            .populate('player1', 'username') 
+            .populate('player1', 'username')
             .populate('player2', 'username');
         if (!game) {
             res.status(404).json({ message: 'Game not found' });
@@ -101,16 +101,11 @@ export const deleteGame = async (req: DeleteGameRequest, res: Response): Promise
 export interface GetGamesHistoryRequest extends AuthenticatedRequest {
     query: IGameHistoryParams;
 }
-export const getGamesHistory = async (req: GetGamesHistoryRequest, res: Response): Promise<void> => {   
+export const getGamesHistory = async (req: GetGamesHistoryRequest, res: Response): Promise<void> => {
     try {
-      
-        const query = await buildGameHistoryQuery(req.query, Game.schema.paths, req.user);
+        const games = await getGamesHistoryPaginated(req);    
 
-        const games = await Game.find(query)
-            .populate('player1', 'username eloRating')
-            .populate('player2', 'username eloRating');
-
-        console.log("games", games.length);
+        console.log("games", games.items.length);
         res.json(games);
     } catch (err) {
         console.error(err);

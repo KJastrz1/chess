@@ -5,18 +5,19 @@ import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
 import Select from "@/components/Ui/Select";
-import { GameStatus, IGameResponse, IGameHistoryParams } from "@/types";
+import { GameStatus, IGameResponse, IGameHistoryParamsFrontend } from "@/types";
 import { useUserContext } from "@/context/AuthContext";
+import PageButtons from "@/components/Ui/PageButtons";
 
 const GameHistory = () => {
     const { user } = useUserContext();
     const navigate = useNavigate();
     const [gameResult, setGameResult] = useState("");
-    const [tempParams, setTempParams] = useState<IGameHistoryParams>({ status: GameStatus.Finished });
-    const [params, setParams] = useState<IGameHistoryParams>({ status: GameStatus.Finished });
+    const [tempParams, setTempParams] = useState<IGameHistoryParamsFrontend>({ status: GameStatus.Finished, page: 1, itemsPerPage: 20 });
+    const [params, setParams] = useState<IGameHistoryParamsFrontend>({ status: GameStatus.Finished, page: 1, itemsPerPage: 20 });
     const gamesQuery = useGetGamesHistory(params);
 
-    const handleSearchChange = (newParams: Partial<IGameHistoryParams>) => {
+    const handleSearchChange = (newParams: Partial<IGameHistoryParamsFrontend>) => {
         setTempParams(prev => ({ ...prev, ...newParams }));
     };
 
@@ -28,6 +29,10 @@ const GameHistory = () => {
         const newResult = event.target.value;
         setGameResult(newResult);
         handleSearchChange({ result: newResult });
+    };
+
+    const setPage = (page: number) => {
+        handleSearchChange({ page });
     };
 
     const getOpponentUsername = (game: IGameResponse) => {
@@ -66,6 +71,12 @@ const GameHistory = () => {
                 </div>
             ) : gamesQuery.data ? (
                 <div className="w-full md:p-10 ">
+                    <div className="flex justify-center mb-4">
+                        <PageButtons
+                            page={gamesQuery.data.currentPage || 1}
+                            totalPages={gamesQuery.data.totalPages || 1}
+                            setPage={setPage} />
+                    </div>
                     {gamesQuery.data.map((game: IGameResponse) => (
                         <div key={game._id} className="grid grid-cols-3 items-center border-b border-gray-800 dark:border-gray-200 p-4">
                             <span className="justify-self-start">vs. {getOpponentUsername(game)}</span>
@@ -76,7 +87,7 @@ const GameHistory = () => {
                                     : <span className="justify-self-center text-white">{getGameResult(game)}</span>
                             }
                             <span className="justify-self-end">
-                                <Button onClick={() => navigate(`/game/${game._id}`)}>
+                                <Button onClick={() => navigate(`/history/${game._id}`)}>
                                     Show Game
                                 </Button>
                             </span>

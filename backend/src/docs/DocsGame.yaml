@@ -172,6 +172,18 @@ paths:
               - lost
               - draw
           description: Filter by game result relative to the authenticated user
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: string
+          description: Page number of the rankings to retrieve
+        - in: query
+          name: itemsPerPage
+          required: false
+          schema:
+            type: string
+          description: Number of ranking items per page
       responses:
         200:
           description: An array of games matching the history criteria

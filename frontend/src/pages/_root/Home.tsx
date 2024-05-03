@@ -83,7 +83,7 @@ const Home = () => {
                     </div>
                     {games.map((game: IGameListItem) => (
                         <div key={game._id} className="grid grid-cols-3 items-center border-b border-gray-800 dark:border-gray-200 p-4">
-                            <span className="justify-self-start">{game.player1?.username}</span>
+                            <span className="justify-self-start">{game.player1.username}</span>
                             <span className="justify-self-center">
                                 <FaRegClock className="text-lg mr-1 inline" />
                                 {game.moveTime} s

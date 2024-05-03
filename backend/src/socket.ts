@@ -54,7 +54,7 @@ export default (io: SocketIOServer) => {
                 if (gamesState[gameId]) {
                     game = gamesState[gameId];
                 } else {
-                    game = await Game.findOne({ _id: gameId });
+                    game = await Game.findById(gameId);
                 }
                 // console.log('game:player2', game?.player2);                
                 if (!game) {
@@ -110,20 +110,21 @@ export default (io: SocketIOServer) => {
             console.log("ruch od gracza", socket.data.user._id)
             const game: IGameModel | null = gamesState[gameId];
             if (!game) {
-                console.log('Gra nie znaleziona');                
+                console.log('Gra nie znaleziona');
                 return;
             }
             if (game.player1.toString() !== playerId
                 && game.player2.toString() !== playerId) {
-                console.log('Gracz nie należy do gry');              
+                console.log('Gracz nie należy do gry');
                 return;
             }
             if (game.whosMove.toString() !== socket.data.user._id.toString()) {
-                console.log('Not your turn');               
+                console.log('Not your turn');
                 return;
             }
 
             const player = game.whitePlayer.toString() === socket.data.user._id.toString() ? 'White' : 'Black';
+            const opponent = player === 'White' ? 'Black' : 'White';
 
             if (isCheckmate(game.board, player)) {
                 game.winner = player === 'White' ? game.player2 : game.player1;
@@ -134,19 +135,20 @@ export default (io: SocketIOServer) => {
                 return;
             }
             if (!isMovePossible(game.board, move, player)) {
-                console.log('Ruch niemożliwy');                
+                console.log('Ruch niemożliwy');
                 return;
             }
             game.board[move.destRow][move.destCol] = game.board[move.srcRow][move.srcCol];
             game.board[move.srcRow][move.srcCol] = 'None';
             game.moves.push(move);
+            game.whosMove = game.whosMove.toString() === game.player1.toString() ? game.player2 : game.player1;
 
-            if (isCheck(game.board, player)) {
+            if (isCheck(game.board, opponent)) {
                 game.whoIsInCheck = game.whosMove;
+                console.log('Szach');
             } else {
                 game.whoIsInCheck = null;
             }
-            game.whosMove = game.whosMove.toString() === game.player1.toString() ? game.player2 : game.player1;
 
             gamesState[gameId] = game;
             const gameToSend: IGameResponse = {
@@ -159,7 +161,7 @@ export default (io: SocketIOServer) => {
             startMoveTimer(gameId, game.moveTime);
             if (game.whoIsInCheck) {
                 io.to(gameId).emit('receiveGame', gameToSend);
-                console.log('Szach',gameToSend);
+                console.log('Szach', gameToSend);
             } else {
                 socket.to(gameId).emit('receiveGame', gameToSend);
             }
@@ -225,12 +227,10 @@ export default (io: SocketIOServer) => {
                     try {
                         await updateEloRating(game.winner, loser);
                         await Game.findByIdAndUpdate(gameId, game);
-                        console.log(`Gra ${gameId} zaktualizowana po rozłączeniu klienta.`);
                     } catch (error) {
                         console.error(`Błąd podczas aktualizacji gry ${gameId}:`, error);
                     }
                     clearMoveTimer(gameId);
-                    console.log(`Gra ${gameId} zaktualizowana po rozłączeniu klienta.`);
                 }, 30000);
             }
         }

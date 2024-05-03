@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "react-query";
 import { QUERY_KEYS } from "./keysQuery";
 import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, getWebSocketToken,  signInAccount, getGamesHistory, getRanking } from "./api";
-import { IGameHistoryParams, IGameParams, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from "@/types";
+import { IGameHistoryParams, IGameHistoryParamsFrontend, IGameParams, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from "@/types";
 import { toast } from "react-toastify";
 
 
@@ -83,7 +83,7 @@ export const useGetGames = (params: IGameParams) => {
     });
 }
 
-export const useGetGamesHistory = (params: IGameHistoryParams) => {
+export const useGetGamesHistory = (params: IGameHistoryParamsFrontend) => {
     return useQuery({
         queryKey: [QUERY_KEYS.GET_GAMES_HISTORY, params],
         queryFn: () => getGamesHistory(params),

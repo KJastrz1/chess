@@ -1,17 +1,14 @@
 import React, { useState } from "react";
 import { useGetRanking } from "../../lib/queries";
-import { useNavigate } from "react-router-dom";
 import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
 import { IRankingParamsFrontend, IUserProfileResponse } from "@/types";
-import { useUserContext } from "@/context/AuthContext";
 import PageButtons from "@/components/Ui/PageButtons";
 import { FaTrophy } from "react-icons/fa";
 
-const Ranking = () => {
-    const { user } = useUserContext();
-    const navigate = useNavigate();
+const Ranking = () => { 
+
     const [tempParams, setTempParams] = useState<IRankingParamsFrontend>({ page: 1, itemsPerPage: 20 });
     const [params, setParams] = useState<IRankingParamsFrontend>({ page: 1, itemsPerPage: 20 });
     const rankingQuery = useGetRanking(params);

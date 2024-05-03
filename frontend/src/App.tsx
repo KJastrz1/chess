@@ -7,6 +7,7 @@ import AuthLayout from "./pages/_auth/AuthLayout"
 import RootLayout from "./pages/_root/RootLayout"
 import GameHistory from "./pages/_root/GameHistory"
 import Ranking from "./pages/_root/Ranking"
+import RewindGame from "./pages/_root/RewindGame"
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/game/:id" element={<Board />} />
           <Route path="/history" element={<GameHistory />} />
+          <Route path="/history/:id" element={<RewindGame />} />
           <Route path="/ranking" element={<Ranking />} />      
         </Route>
       </Routes>

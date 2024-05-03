@@ -1,15 +1,16 @@
-import { ChessSquare, IMove, initialBoard,  GameStatus } from '../types/index';
+import { ChessSquare, IMove, initialBoard, GameStatus } from '../types/index';
 import mongoose, { Schema, Document, Types } from "mongoose";
+import { IUserModel } from './User';
 
 export interface IGameModel extends Document {
     _id: Types.ObjectId;
     player1: Types.ObjectId;
-    player2: Types.ObjectId;    
+    player2: Types.ObjectId;
     whitePlayer: Types.ObjectId;
     whosMove: Types.ObjectId;
     moveTime: number;
     whoIsInCheck: Types.ObjectId | null;
-    timer?: NodeJS.Timeout|null;
+    timer?: NodeJS.Timeout | null;
     moves: IMove[];
     status: GameStatus;
     player1Connected: boolean;
@@ -22,7 +23,7 @@ export interface IGameModel extends Document {
 
 const gameSchema = new Schema<IGameModel>({
     player1: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    player2: { type: Schema.Types.ObjectId, ref: 'User', default: null },    
+    player2: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     whitePlayer: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     whosMove: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     moveTime: { type: Number, default: 180, required: true },

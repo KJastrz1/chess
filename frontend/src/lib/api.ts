@@ -1,5 +1,5 @@
 import axios from "axios";
-import { GameStatus, IGameHistoryParams, IGameParams, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from '@/types';
+import { GameStatus, IGameHistoryParams, IGameHistoryParamsFrontend, IGameParams, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
@@ -105,7 +105,7 @@ export async function createGame() {
     }
 }
 
-export async function getGamesHistory(params: IGameHistoryParams) {
+export async function getGamesHistory(params: IGameHistoryParamsFrontend) {
     try {
         const response = await axios.get(`${API_URL}/games/history`, { params });
         return response.data;

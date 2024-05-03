@@ -1,5 +1,7 @@
+import { GetGamesHistoryRequest } from '@src/controllers/GameController';
+import { Game } from '@src/models/Game';
 import { IUserModel, User } from '@src/models/User';
-import { GameStatus, IGameHistoryParams, IGameParams } from '@src/types';
+import { GameStatus, IGameHistoryItem, IGameHistoryParams, IGameParams, IPaginetedResult } from '@src/types';
 import mongoose from 'mongoose';
 
 export async function buildGamesQuery(params: IGameParams, schemaPaths: any, requestingUser: IUserModel) {
@@ -56,8 +58,53 @@ export async function buildGamesQuery(params: IGameParams, schemaPaths: any, req
     return query;
 }
 
-export async function buildGameHistoryQuery(params: IGameHistoryParams, schemaPaths: any, requestingUser: IUserModel) {
-    console.log(params)
+export async function getGamesHistoryPaginated(req: GetGamesHistoryRequest) {
+    try {
+        const page = parseInt(req.query.page || "1", 10);
+        const itemsPerPage = parseInt(req.query.itemsPerPage || "20", 10);
+
+        const query = await buildGameHistoryPaginatedQuery(req.query, Game.schema.paths, req.user);
+
+        const totalItems = await Game.countDocuments(query);
+        const games = await Game.find(query)
+            .populate('player1', 'username eloRating')
+            .populate('player2', 'username eloRating')
+            .skip((page - 1) * itemsPerPage)
+            .limit(itemsPerPage)
+            .sort({ createdAt: -1 });
+
+        const gamesResult: IGameHistoryItem[] = games.map(game => ({
+            _id: game._id.toString(),
+            player1: {
+                _id: game.player1,
+                username: (game.player1 as IUserModel).username,
+                eloRating: (game.player1 as IUserModel).eloRating,
+                rankingPlace: (game.player1 as IUserModel).rankingPlace
+            },
+            player2: {
+                _id: (game.player2 as IUserModel)._id.toString(),
+                username: (game.player2 as IUserModel).username,
+                eloRating: (game.player2 as IUserModel).eloRating,
+                rankingPlace: (game.player2 as IUserModel).rankingPlace
+            },
+            winner: game.winner ? game.winner.toString() : null,
+            moveTime: game.moveTime,
+            createdAt: game.createdAt.toISOString(),
+        }));
+        const result: IPaginetedResult<IGameHistoryItem> = {
+            totalItems,
+            totalPages: Math.ceil(totalItems / itemsPerPage),
+            currentPage: page,
+            items: gamesResult
+        };
+
+        return result;
+    } catch (err) {
+        throw new Error(`An error occurred while retrieving game history`);
+    }
+};
+
+async function buildGameHistoryPaginatedQuery(params: IGameHistoryParams, schemaPaths: any, requestingUser: IUserModel) {
     const query: { [key: string]: any } = { status: GameStatus.Finished };
 
     if (params.result) {
@@ -79,19 +126,15 @@ export async function buildGameHistoryQuery(params: IGameHistoryParams, schemaPa
     if (params.opponentUsername) {
         const users = await User.find({ username: { $regex: new RegExp(params.opponentUsername, 'i') } }).select('_id');
         const userIds = users.map(user => user._id).filter(id => !id.equals(requestingUser._id));
-        console.log(userIds);
-
-
         query['$or'] = [
             { player1: requestingUser._id, player2: { $in: userIds } },
             { player2: requestingUser._id, player1: { $in: userIds } }
         ];
-
     }
 
     for (const key of Object.keys(params) as (keyof IGameHistoryParams)[]) {
         const value = params[key];
-        if (value !== undefined && !['opponentUsername', 'status', 'result'].includes(key) && schemaPaths[key]) {
+        if (value !== undefined && !['opponentUsername', 'status', 'result', 'page', 'itemsPerPage'].includes(key) && schemaPaths[key]) {
             const schemaType = schemaPaths[key].instance;
             switch (schemaType) {
                 case 'ObjectID':
@@ -116,4 +159,3 @@ export async function buildGameHistoryQuery(params: IGameHistoryParams, schemaPa
 
     return query;
 }
-

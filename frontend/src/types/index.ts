@@ -133,9 +133,19 @@ export type IGameHistoryParams = {
     moveTime?: string;
     winner?: string;
     result?: 'won' | 'lost' | 'draw';
-    opponentUsername?: string;   
-    updatedAt?: string;
-    createdAt?: string;
+    opponentUsername?: string;
+    page?: string;
+    itemsPerPage?: string;
+};
+
+export type IGameHistoryParamsFrontend = {
+    status: GameStatus.Finished;
+    moveTime?: number;
+    winner?: string;
+    result?: 'won' | 'lost' | 'draw';
+    opponentUsername?: string;
+    page?: number;
+    itemsPerPage?: number;
 };
 
 export type IMove = {
@@ -148,13 +158,17 @@ export type IMove = {
 
 export type IGameListItem = {
     _id: string;
-    player1: {
-        _id: string;
-        username: string;
-        eloRating: number;
-    };
+    player1: IUserProfileResponse;    
+    moveTime: number;
+};
+
+export type IGameHistoryItem = {
+    _id: string;
+    player1: IUserProfileResponse;
+    player2: IUserProfileResponse;
     winner: string | 'draw' | null;
     moveTime: number;
+    createdAt: string;
 };
 
 export enum GameStatus {
