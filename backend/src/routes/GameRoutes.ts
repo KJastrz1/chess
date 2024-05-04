@@ -1,7 +1,7 @@
 import express from 'express';
 
 import { handleAuthenticatedRequest, protect } from '../middleware/authMiddleware';
-import { DeleteGameRequest, GetGamesHistoryRequest, GetGameByIdRequest, UpdateGameRequest, createGame, deleteGame, getGames, getGameById, getGamesHistory, updateGame, GetGamesRequest } from '@src/controllers/GameController';
+import { DeleteGameRequest, GetGamesHistoryRequest, GetGameByIdRequest, UpdateGameRequest, createGame, deleteGame, getGames, getGameById, getGamesHistory, updateGame, GetGamesRequest } from '../controllers/GameController';
 
 const router = express.Router();
 

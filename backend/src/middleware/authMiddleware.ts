@@ -19,7 +19,7 @@ export const protect: RequestHandler = async (req: any, res: Response, next: Nex
         return res.status(404).json({ message: 'User not found' });
       }
       authReq.user = user;
-      // authReq.headers.authorization = `Bearer ${token}`;
+      
       next();
     } catch (error) {
       console.error(error);
