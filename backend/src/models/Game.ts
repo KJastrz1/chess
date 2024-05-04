@@ -10,7 +10,6 @@ export interface IGameModel extends Document {
     whosMove: Types.ObjectId;
     moveTime: number;
     whoIsInCheck: Types.ObjectId | null;
-    timer?: NodeJS.Timeout | null;
     moves: IMove[];
     status: GameStatus;
     player1Connected: boolean;
@@ -27,6 +26,7 @@ const gameSchema = new Schema<IGameModel>({
     whitePlayer: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     whosMove: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     moveTime: { type: Number, default: 180, required: true },
+    whoIsInCheck: { type: Schema.Types.ObjectId, default: null },
     moves: [{
         srcRow: { type: Number },
         srcCol: { type: Number },
@@ -35,6 +35,8 @@ const gameSchema = new Schema<IGameModel>({
         figure: { type: String },
     }],
     status: { type: String, required: true, enum: Object.values(GameStatus), default: GameStatus.WaitingForPlayer2 },
+    player1Connected: { type: Boolean, default: false },
+    player2Connected: { type: Boolean, default: false },
     winner: { type: Schema.Types.ObjectId, default: null },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },

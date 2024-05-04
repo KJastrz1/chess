@@ -1,19 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { ChessSquare, GameStatus, IGameResponse, IMove, PossibleMove, SelectedPiece, White } from '@/types';
 import Loader from '@/components/Ui/Loader';
 import { useGetWebSocketToken } from '@/lib/queries';
-import { calculatePossibleMoves, checkIfPossibleMove, checkCapture } from '@/logic/chessLogic';
+
 import Square from '@/shared/Square';
 import { useUserContext } from '@/context/AuthContext';
 import Button from '@/components/Ui/Button';
 import Input from '@/components/Ui/Input';
+import { calculatePossibleMoves, checkCapture, checkIfPossibleMove } from '@/logic/chessLogic';
 
 const SOCKET_SERVER_URL = import.meta.env.VITE_SOCKET_URL;
 let socket: Socket;
 
 function Board() {
+  const navigate = useNavigate();
   const { id: gameId } = useParams<{ id: string }>();
   const { data: token, isLoading: isLoadingToken, error: errorToken } = useGetWebSocketToken();
   const [isLoadingGameFromSocket, setIsLoadingGameFromSocket] = useState(true);
@@ -49,7 +51,7 @@ function Board() {
   useEffect(() => {
     if (!socket && token) {
       socket = io(SOCKET_SERVER_URL, { auth: { token } });
-
+      console.log('connecting socket')
       socket.on('connect', () => {
         socket.emit('joinGame', gameId, (message: string) => {
           console.log(message);
@@ -69,7 +71,6 @@ function Board() {
 
       socket.on('timeOut', (newTurnObject: { newTurn: string }) => {
         setIsPlayerTurn(newTurnObject.newTurn === user._id);
-        // console.log('timeOut');
       });
 
       socket.on('playerLeft', () => {
@@ -85,7 +86,6 @@ function Board() {
   useEffect(() => {
     if (game && game.status === GameStatus.InProgress) {
       startTimer(game.moveTime);
-      // console.log('starting timer again for game', game._id);
     }
   }, [game, isPlayerTurn]);
 
@@ -170,8 +170,11 @@ function Board() {
           </div>
         )}
         {game.winner && (
-          <div className={`text-xl font-semibold ${game.winner === user._id ? 'text-green-500' : 'text-red-500'}`}>
-            {game.winner === user._id ? 'You won!' : 'You lost!'}
+          <div className='flex flex-col gap-4 items-center'>
+            <div className={`text-xl font-semibold ${game.winner === user._id ? 'text-green-500' : 'text-red-500'}`}>
+              {game.winner === user._id ? 'You won!' : 'You lost!'}
+            </div>
+            <Button onClick={() => { navigate('/') }}>Back to lobby</Button>
           </div>
         )}
         {opponentLeft && (
@@ -181,7 +184,7 @@ function Board() {
           <>
             {game.status === GameStatus.WaitingForPlayer2 &&
               <div className="text-xl font-semibold">Waiting for the opponent to join...</div>}
-            {game.player1 === user._id ? (
+            {game.player1._id === user._id ? (
               <div className='flex flex-col gap-2'>
                 <div>Set move time limit(10s-300s):</div>
                 <Input
@@ -200,7 +203,6 @@ function Board() {
                     setMoveTimeInput(300);
                   }
                   socket.emit('changeMoveTime', moveTimeInput, (message: string) => {
-                    setMoveTimeMessage(message);
                     console.log(message);
                   })
                 }}>Set</Button>

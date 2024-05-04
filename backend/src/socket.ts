@@ -2,25 +2,21 @@
 import jwt from 'jsonwebtoken';
 import { Game, IGameModel } from './models/Game';
 import { IUserModel, User } from './models/User';
-import { GameStatus, IGameResponse, IMove } from './types';
+import { GameStatus, IGameResponse, IMove, IUserProfileResponse } from './types';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { isCheck, isCheckmate, isMovePossible } from './utils/chessLogic';
 import { updateEloRating } from './services/UserService';
 
 
-const gamesState: Record<string, IGameModel> = {};
+
 const disconnectionTimers: Record<string, NodeJS.Timeout> = {};
-
-interface SocketData {
-    user: IUserModel | null;
-}
-
+const moveTimers: Record<string, NodeJS.Timeout> = {};
 
 export default (io: SocketIOServer) => {
     io.use(async (socket: Socket, next: any) => {
-        // console.log('handshake token:', socket.handshake.auth.token);
+
         const { token } = socket.handshake.auth.token;
-        // console.log('token:', token);
+
         if (token) {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as jwt.JwtPayload;
@@ -30,7 +26,7 @@ export default (io: SocketIOServer) => {
                 if (!socket.data.user) {
                     next(new Error('User not found'));
                 }
-                // console.log('token poprawny');
+
                 next();
             } catch (error) {
                 console.error(error);
@@ -42,232 +38,245 @@ export default (io: SocketIOServer) => {
     });
 
     io.on('connection', (socket: Socket) => {
+
         socket.on('joinGame', async (gameId: string, cb: (message: string) => void) => {
             try {
+
                 const playerId: string = socket.data.user._id.toString();
+
                 if (disconnectionTimers[playerId]) {
                     clearTimeout(disconnectionTimers[playerId]);
                     delete disconnectionTimers[playerId];
                 }
-                console.log('user o id:', playerId, " dolaczyl do gry o id: ", gameId);
-                let game: IGameModel | null;
-                if (gamesState[gameId]) {
-                    game = gamesState[gameId];
-                } else {
-                    game = await Game.findById(gameId);
-                }
-                // console.log('game:player2', game?.player2);                
+
+                const game = await Game.findById(gameId).populate('player1', 'username eloRating rankingPlace').populate('player2', 'username eloRating rankingPlace');
+
                 if (!game) {
-                    console.log('Gra nie znaleziona');
+                    console.log("game not found")
                     cb('Game not found');
                     return;
                 }
-                if (game.player1.toString() !== playerId
+
+                if (game.player1._id.toString() !== playerId
                     && game.status === GameStatus.WaitingForPlayer2) {
-                    game.player2 = await User.findById(socket.data.user._id);
+
+                    game.player2 = await User.findById(socket.data.user._id).select('username eloRating rankingPlace') as IUserModel;
+
                     if (!game.player2) {
-                        console.log('Gracz nie znaleziony');
+                        console.log("player2 not found")
                         return;
                     }
-                    console.log('Gracz dolaczyl do gry jako drugi');
                     const players = [game.player1._id, game.player2._id];
                     const whitePlayerIndex = Math.floor(Math.random() * players.length);
                     game.whitePlayer = players[whitePlayerIndex];
                     game.whosMove = game.whitePlayer;
                     game.status = GameStatus.WaitingForStart;
-                    console.log('Gracz bialy:', game.whitePlayer);
-                    console.log('Gracz wykonujacy ruch:', game.whosMove);
                 }
 
-                if (game.player1.toString() !== playerId
-                    && game.player2 && game.player2.toString() !== playerId) {
-                    console.log('Gracz nie należy do gry');
+                if (game.player1._id.toString() !== playerId
+                    && game.player2 && game.player2._id.toString() !== playerId) {
+                    console.log("player not assigned to this game")
                     cb('Player not assigned to this game');
                     return;
                 }
 
-                if (game.player1.toString() === playerId) {
+                if (game.player1._id.toString() === playerId) {
                     game.player1Connected = true;
                 }
-                if (game.status !== GameStatus.WaitingForPlayer2 && game.player2 && game.player2.toString() === playerId) {
+                if (game.status !== GameStatus.WaitingForPlayer2 && game.player2 && game.player2._id.toString() === playerId) {
                     game.player2Connected = true;
                 }
-
-                gamesState[gameId] = game;
-
                 socket.data.gameId = gameId;
-                socket.join(gameId);
-                const gameToSend = {
-                    ...game.toObject(),
-                    player1Connected: game.player1Connected,
-                    player2Connected: game.player2Connected
-                };
-                io.to(gameId).emit('receiveGame', gameToSend);
+                socket.join(gameId);       
+            
+              
+                io.to(gameId).emit('receiveGame', game);
+                await Game.findByIdAndUpdate(gameId, game);
             } catch (error) {
-                console.error('Błąd podczas dołączania do gry:', error);
                 cb('Error joining the game');
             }
         });
 
         socket.on('sendMove', async (move: IMove, gameId: string, cb: (message: string) => void) => {
-            const playerId: string = socket.data.user._id.toString();
-            console.log("ruch od gracza", socket.data.user._id)
-            const game: IGameModel | null = gamesState[gameId];
-            if (!game) {
-                console.log('Gra nie znaleziona');
-                return;
-            }
-            if (!game.player2) {
-                console.log('Player 2 jest null');
-                return;
-            }
-            if (game.player1._id.toString() !== playerId
-                && game.player2._id.toString() !== playerId) {
-                console.log('Gracz nie należy do gry');
-                return;
-            }
-            if (game.whosMove.toString() !== socket.data.user._id.toString()) {
-                console.log('Not your turn');
-                return;
-            }
+            try {
+                const playerId: string = socket.data.user._id.toString();
+                const game = await Game.findById(gameId).populate('player1', 'username eloRating rankingPlace').populate('player2', 'username eloRating rankingPlace');
+                if (!game) {
+                    cb('Game not found');
+                    return;
+                }
+                if (!game.player2) {
+                    cb('No player2 assigned to this game');
+                    return;
+                }
+                if (game.player1._id.toString() !== playerId
+                    && game.player2._id.toString() !== playerId) {
+                    cb("Player not assigned to this game")
+                    return;
+                }
+                if (game.whosMove.toString() !== playerId) {
+                    cb('Not your turn');
+                    return;
+                }
 
-            const player = game.whitePlayer.toString() === socket.data.user._id.toString() ? 'White' : 'Black';
-            const opponent = player === 'White' ? 'Black' : 'White';
+                const player = game.whitePlayer.toString() === playerId ? 'White' : 'Black';
+                const opponent = player === 'White' ? 'Black' : 'White';
+           
+                if (!isMovePossible(game.board, move, player)) {
+                    return;
+                }
+                game.board[move.destRow][move.destCol] = game.board[move.srcRow][move.srcCol];
+                game.board[move.srcRow][move.srcCol] = 'None';
+                game.moves.push(move);
+                game.whosMove = game.whosMove.toString() === game.player1._id.toString() ? game.player2._id : game.player1._id;
 
-            if (isCheckmate(game.board, player)) {
-                game.winner = player === 'White' ? game.player2._id : game.player1._id;
-                game.status = GameStatus.Finished;
-                delete gamesState[gameId];
-                io.to(gameId).emit('receiveGame', game);
+                if (isCheckmate(game.board, opponent)) {
+                    game.winner = playerId === game.player1._id.toString() ? game.player1._id : game.player2._id;
+                    game.status = GameStatus.Finished;
+                    await Game.findByIdAndUpdate(gameId, game);
+                    io.to(gameId).emit('receiveGame', game);
+                    clearDisconnectionTimer(game.player1.toString());
+                    clearDisconnectionTimer((game.player2 as IUserModel).toString());
+                    clearMoveTimer(gameId);                   
+                    return;
+                }
+
+                if (isCheck(game.board, opponent)) {
+                    game.whoIsInCheck = game.whosMove;
+                } else {
+                    game.whoIsInCheck = null;
+                }
+
+                const gameToSend: IGameResponse = {
+                    ...game.toObject(),
+                    whoIsInCheck: game.whoIsInCheck ? game.whoIsInCheck.toString() : null,
+                };
                 clearMoveTimer(gameId);
-                return;
-            }
-            if (!isMovePossible(game.board, move, player)) {
-                console.log('Ruch niemożliwy');
-                return;
-            }
-            game.board[move.destRow][move.destCol] = game.board[move.srcRow][move.srcCol];
-            game.board[move.srcRow][move.srcCol] = 'None';
-            game.moves.push(move);
-            game.whosMove = game.whosMove.toString() === game.player1._id.toString() ? game.player2._id : game.player1._id;
-
-            if (isCheck(game.board, opponent)) {
-                game.whoIsInCheck = game.whosMove;
-                console.log('Szach');
-            } else {
-                game.whoIsInCheck = null;
-            }
-
-            gamesState[gameId] = game;
-            const gameToSend: IGameResponse = {
-                ...game.toObject(),
-                player1Connected: game.player1Connected,
-                player2Connected: game.player2Connected,
-                whoIsInCheck: game.whoIsInCheck ? game.whoIsInCheck.toString() : null,
-            };
-            clearMoveTimer(gameId);
-            startMoveTimer(gameId, game.moveTime);
-            if (game.whoIsInCheck) {
+                startMoveTimer(gameId, game.moveTime);
                 io.to(gameId).emit('receiveGame', gameToSend);
-                console.log('Szach', gameToSend);
-            } else {
-                socket.to(gameId).emit('receiveGame', gameToSend);
+                await Game.findByIdAndUpdate(gameId, game);
+            } catch (error) {
+                console.error(error);
             }
         })
 
         socket.on('changeMoveTime', async (moveTime: number, cb: (message: string) => void) => {
-            const gameId = socket.data.gameId;
-            const game = gamesState[gameId];
-            if (game.status !== GameStatus.WaitingForPlayer2 && game.status !== GameStatus.WaitingForStart) {
-                cb('You can only change time limit before game started');
-                return;
-            }
-            if (game) {
-                if (moveTime < 10) {
-                    moveTime = 10;
+            try {
+                const gameId = socket.data.gameId;
+                const game = await Game.findById(gameId).populate('player1', 'username eloRating rankingPlace').populate('player2', 'username eloRating rankingPlace');
+                if (!game) {
+                    cb('Game not found');
+                    return;
                 }
-                if (moveTime > 300) {
-                    moveTime = 300;
+                if (game.status !== GameStatus.WaitingForPlayer2 && game.status !== GameStatus.WaitingForStart) {
+                    cb('You can only change time limit before game started');
+                    return;
                 }
-                game.moveTime = moveTime;
-                cb("Time limit set to " + moveTime + " seconds")
-                socket.to(gameId).emit('receiveGame', game);
-                await Game.findByIdAndUpdate(gameId, game);
+                if (game) {
+                    if (moveTime < 10) {
+                        moveTime = 10;
+                    }
+                    if (moveTime > 300) {
+                        moveTime = 300;
+                    }
+                    game.moveTime = moveTime;
+                    cb("Time limit set to " + moveTime + " seconds")
+
+                    io.to(gameId).emit('receiveGame', game);
+                    await Game.findByIdAndUpdate(gameId, game);
+                }
+            } catch (error) {
+                console.error(error);
             }
         })
 
         socket.on('startGame', async () => {
-            const gameId = socket.data.gameId;
-            const game = gamesState[gameId];
-            if (game) {
+            try {
+                const gameId = socket.data.gameId;
+                const game = await Game.findById(gameId).populate('player1', 'username eloRating rankingPlace').populate('player2', 'username eloRating rankingPlace');
+                if (!game) {
+                    return;
+                }
                 game.status = GameStatus.InProgress;
                 io.to(gameId).emit('receiveGame', game);
                 startMoveTimer(gameId, game.moveTime);
+                await Game.findByIdAndUpdate(gameId, game);
+            } catch (error) {
+                console.error(error);
             }
         });
 
         socket.on('disconnect', async (reason) => {
-            console.log(`User rozłączony: ${socket.data.user._id}, Powód: ${reason}`);
+            try {
+                const gameId = socket.data.gameId;
+                const game = await Game.findById(gameId).populate('player1', 'username eloRating rankingPlace').populate('player2', 'username eloRating rankingPlace');
 
-            const gameId = socket.data.gameId;
-            const game = gamesState[gameId];
+                if (!game || !game.player2) {
+                    return;
+                }
 
-            if (!gameId || !game.player2 || !gamesState[gameId]) {
-                return;
+                const playerId: string = socket.data.user._id.toString();
+                if (game.status === GameStatus.WaitingForStart && playerId === game.player2._id.toString()) {
+                    game.status = GameStatus.WaitingForPlayer2;
+                    game.player2Connected = false;
+                    socket.to(gameId).emit('receiveGame', game);
+                    await Game.findByIdAndUpdate(gameId, game);
+                }
+                else if ((game.status === GameStatus.WaitingForPlayer2 || game.status === GameStatus.WaitingForStart) && playerId === game.player1.toString()) {
+                    await Game.findByIdAndDelete(gameId);
+                } else {
+                    disconnectionTimers[playerId] = setTimeout(async () => {
+                        socket.to(gameId).emit('playerLeft');
+
+                        game.winner = game.player1.toString() === playerId ? (game.player2 as IUserModel)._id : game.player1._id;
+
+                        game.status = GameStatus.Finished;
+                        const loser = game.player1.toString() === playerId ? game.player1._id : (game.player2 as IUserModel)._id;
+                        try {
+                            await updateEloRating(game.winner, loser);
+                            await Game.findByIdAndUpdate(gameId, game);
+                        } catch (error) {
+                            console.error(`Błąd podczas aktualizacji gry ${gameId}:`, error);
+                        }
+                        clearDisconnectionTimer(game.player1.toString());
+                        clearDisconnectionTimer((game.player2 as IUserModel).toString());
+                        clearMoveTimer(gameId);
+                    }, 30000);
+                }
+            } catch (error) {
+                console.error(error);
             }
-
-
-            const playerId: string = socket.data.user._id.toString();
-            if (game.status === GameStatus.WaitingForStart && playerId === game.player2._id.toString()) {
-                game.status = GameStatus.WaitingForPlayer2;
-                game.player2Connected = false;
-                socket.to(gameId).emit('receiveGame', game);
-            }
-            else if ((game.status === GameStatus.WaitingForPlayer2 || game.status === GameStatus.WaitingForStart) && playerId === game.player1.toString()) {
-                delete gamesState[gameId];
-                await Game.findByIdAndDelete(gameId);
-            } else {
-                disconnectionTimers[playerId] = setTimeout(async () => {
-                    socket.to(gameId).emit('playerLeft');
-
-                    game.winner = game.player1.toString() === playerId ? (game.player2 as IUserModel)._id : game.player1._id;
-
-                    game.status = GameStatus.Finished;
-                    const loser = game.player1.toString() === playerId ? game.player1._id : (game.player2 as IUserModel)._id;
-                    delete gamesState[gameId];
-                    try {
-                        await updateEloRating(game.winner, loser);
-                        await Game.findByIdAndUpdate(gameId, game);
-                    } catch (error) {
-                        console.error(`Błąd podczas aktualizacji gry ${gameId}:`, error);
-                    }
-                    clearMoveTimer(gameId);
-                }, 30000);
-            }
-        }
-        );
+        });
 
         const startMoveTimer = (gameId: string, moveTime: number) => {
-            const timeoutId = setTimeout(() => {
-                const game = gamesState[gameId];
-                if (game) {
-                    game.whosMove = game.whosMove.toString() === game.player1._id.toString() ? (game.player2 as IUserModel)._id : game.player1._id;
-                    console.log(`Czas na ruch minął, teraz kolej na: ${game.whosMove}`);
-                    startMoveTimer(gameId, moveTime);
-                    io.to(gameId).emit('timeOut', { newTurn: game.whosMove });
+            const timeoutId = setTimeout(async () => {
+                try {
+                    const game = await Game.findById(gameId).populate('player1', 'username eloRating rankingPlace').populate('player2', 'username eloRating rankingPlace');
+                    if (game) {
+                        game.whosMove = game.whosMove.toString() === game.player1._id.toString() ? (game.player2 as IUserModel)._id : game.player1._id;
+                        startMoveTimer(gameId, moveTime);
+                        io.to(gameId).emit('timeOut', { newTurn: game.whosMove });
+                        await Game.findByIdAndUpdate(gameId, game)
+                    }
+                } catch (error) {
+                    console.error(error);
                 }
             }, moveTime * 1000);
-
-            gamesState[gameId].timer = timeoutId;
+            moveTimers[gameId] = timeoutId;
         };
 
         const clearMoveTimer = (gameId: string) => {
-            const game = gamesState[gameId];
-            if (game && game.timer) {
-                clearTimeout(game.timer);
-                game.timer = null;
+            if (moveTimers[gameId]) {
+                clearTimeout(moveTimers[gameId]);
+                delete moveTimers[gameId];
             }
         };
-    })
 
+        const clearDisconnectionTimer = (playerId: string) => {
+            if (disconnectionTimers[playerId]) {
+                clearTimeout(disconnectionTimers[playerId]);
+                delete disconnectionTimers[playerId];
+            }
+        }
+    })
 }

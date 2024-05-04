@@ -147,28 +147,21 @@ export const calculatePossibleMoves = (figure: White | Black, row: number, col: 
     case Black.King: {
       const kingMoves = [...lineMoves, ...diagonalMoves];
       kingMoves.forEach(({ dRow, dCol }) => {
-        for (let i = 1; i < 1; i++) {
-          const newRow = row + dRow * i;
-          const newCol = col + dCol * i;
 
-          if (newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8) break;
+        const newRow = row + dRow;
+        const newCol = col + dCol;
 
-          const target = gameState[newRow][newCol];
-          if (target === "None") {
-            const move: IMove = { srcRow: row, srcCol: col, destRow: newRow, destCol: newCol, figure: figure };
-            if (!doesMoveCauseOwnCheck(gameState, move, isWhite ? "White" : "Black")) {
-              moves.push({ row: newRow, col: newCol });
-            }
-          } else {
-            if (Object.values(opponentPieces).includes(target)) {
-              const move: IMove = { srcRow: row, srcCol: col, destRow: newRow, destCol: newCol, figure: figure };
-              if (!doesMoveCauseOwnCheck(gameState, move, isWhite ? "White" : "Black")) {
-                moves.push({ row: newRow, col: newCol });
-              }
-            }
-            break;
+        if (newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8) return;
+
+        const target = gameState[newRow][newCol];
+        if (target === "None" || Object.values(opponentPieces).includes(target)) {
+          const move: IMove = { srcRow: row, srcCol: col, destRow: newRow, destCol: newCol, figure: figure };
+
+          if (!doesMoveCauseOwnCheck(gameState, move, isWhite ? "White" : "Black")) {
+            moves.push({ row: newRow, col: newCol });
           }
         }
+
       });
     }
       break;
@@ -219,14 +212,13 @@ export function isSquareAttackedByOpponent(board: ChessSquare[][], destRow: numb
     { row: 1, col: -2 }, { row: 1, col: 2 },
     { row: 2, col: -1 }, { row: 2, col: 1 }
   ];
-  for (let move of knightMoves) {
+  for (const move of knightMoves) {
     const newRow = destRow + move.row;
     const newCol = destCol + move.col;
     if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 && board[newRow][newCol] === opponent + 'n') {
       return true;
     }
   }
-
   const lineMoves = [
     { row: -1, col: 0 }, { row: 1, col: 0 },
     { row: 0, col: -1 }, { row: 0, col: 1 }
@@ -245,7 +237,7 @@ export function isSquareAttackedByOpponent(board: ChessSquare[][], destRow: numb
 }
 
 export function isAttackedByLineMover(board: ChessSquare[][], destRow: number, destCol: number, opponent: "w" | "b", moves: { row: number, col: number }[]) {
-  for (let move of moves) {
+  for (const move of moves) {
     let newRow = destRow + move.row;
     let newCol = destCol + move.col;
     while (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
@@ -287,11 +279,4 @@ export function doesMoveCauseOwnCheck(board: ChessSquare[][], move: IMove, playe
   return isInCheck;
 }
 
-export function isCheck(board: ChessSquare[][], player: "White" | "Black"): boolean {
-  const kingPosition = findKingPosition(board, player);
-  if (!kingPosition) {
-    throw new Error('King not found');
-  }
-  const opponent = player === 'White' ? 'b' : 'w';
-  return isSquareAttackedByOpponent(board, kingPosition.row, kingPosition.col, opponent);
-}
+

@@ -10,7 +10,7 @@ export async function getGamesPagineted(req: GetGamesRequest) {
         const itemsPerPage = parseInt(req.query.itemsPerPage || "20", 10);
 
         const query = await buildGamesQuery(req.query, Game.schema.paths, req.user);
-
+    
         const totalItems = await Game.countDocuments(query);
         const games = await Game.find(query)
             .populate('player1', 'username eloRating rankingPlace')
@@ -39,7 +39,7 @@ export async function getGamesPagineted(req: GetGamesRequest) {
 export async function buildGamesQuery(params: IGameParams, schemaPaths: any, requestingUser: IUserModel) {
 
     const query: { [key: string]: any } = {};
-    const eloRange = 100;
+    const eloRange = 500;
 
     if (requestingUser?.eloRating) {
         const eloUsers = await User.find({
@@ -107,7 +107,7 @@ export async function getGamesHistoryPaginated(req: GetGamesHistoryRequest) {
 
         const gamesResult: IGameHistoryItem[] = games.map(game => ({
             _id: game._id.toString(),            
-            player1: (game.player2 as IUserModel).toObject() as IUserProfileResponse,       
+            player1: (game.player1 as IUserModel).toObject() as IUserProfileResponse,       
             player2: (game.player2 as IUserModel).toObject() as IUserProfileResponse,
             winner: game.winner ? game.winner.toString() : null,
             moveTime: game.moveTime,

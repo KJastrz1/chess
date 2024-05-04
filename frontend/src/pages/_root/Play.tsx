@@ -7,7 +7,7 @@ import Input from "@/components/Ui/Input";
 import Loader from "@/components/Ui/Loader";
 import Button from "@/components/Ui/Button";
 import LoadingButton from "@/components/Ui/LoadingButton";
-import { GameStatus, IGameListItem, IGameParams, IGameParamsFrontend } from "@/types";
+import { GameStatus, IGameListItem,  IGameParamsFrontend } from "@/types";
 import PageButtons from "@/components/Ui/PageButtons";
 
 

@@ -1,18 +1,24 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import { Game } from '@src/models/Game';
-import { IGameResponse, IGameHistoryParams, IGameParams } from '@src/types/index';
+import { IGameResponse, IGameHistoryParams, IGameParams, IUserProfileResponse } from '@src/types/index';
 import { AuthenticatedRequest } from '@src/types/express';
-import { buildGamesQuery, getGamesHistoryPaginated, getGamesPagineted } from '@src/services/GameService';
+import { getGamesHistoryPaginated, getGamesPagineted } from '@src/services/GameService';
+
 
 export const createGame = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
+
         const game = new Game({
-            player1: req.user._id,
+            player1: req.user,
         });
 
         await game.save();
-        res.status(201).json(game);
+        const gameToSend: IGameResponse = {
+            ...game.toObject(),
+            player1: game.player1.toObject() as IUserProfileResponse,
+        };
+        res.status(201).json(gameToSend);
     } catch (err: any) {
         res.status(400).json({ message: err.message });
     }
@@ -23,8 +29,7 @@ export interface GetGamesRequest extends AuthenticatedRequest {
 }
 export const getGames = async (req: GetGamesRequest, res: Response): Promise<void> => {
     try {
-        const games = await getGamesPagineted(req);      
-       
+        const games = await getGamesPagineted(req);   
         res.json(games);
     } catch (err) {
         console.error(err);
@@ -97,7 +102,7 @@ export interface GetGamesHistoryRequest extends AuthenticatedRequest {
 }
 export const getGamesHistory = async (req: GetGamesHistoryRequest, res: Response): Promise<void> => {
     try {
-        const games = await getGamesHistoryPaginated(req);    
+        const games = await getGamesHistoryPaginated(req);
 
         console.log("games", games.items.length);
         res.json(games);
