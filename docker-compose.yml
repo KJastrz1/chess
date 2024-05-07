@@ -3,8 +3,6 @@ version: '3.8'
 services:
   frontend:
     image: ghcr.io/kjastrz1/chess/frontend:latest  
-    env_file:
-      - ./frontend/.env.example
     ports:
       - '5173:80'
     depends_on:
