@@ -115,8 +115,7 @@ function Board() {
     }
   };
 
-  const handleSqaureClick = (figure: ChessSquare, row: number, col: number): void => {
-    console.log("gracz kliknął na pole", figure, row, col,"i gra białymi?", isWhitePlayer)    
+  const handleSqaureClick = (figure: ChessSquare, row: number, col: number): void => {      
     if (!isPlayerTurn || game?.status !== GameStatus.InProgress || opponentLeft) {
       return;
     }

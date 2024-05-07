@@ -135,9 +135,10 @@ export default (io: SocketIOServer) => {
 
                     const loser = game.player1._id.toString() !== playerId ? game.player1._id : (game.player2 as IUserModel)._id;
                     game.status = GameStatus.Finished;
+                   
+                    io.to(gameId).emit('receiveGame', game);
                     await updateEloRating(game.winner, loser);
                     await Game.findByIdAndUpdate(gameId, game);
-                    io.to(gameId).emit('receiveGame', game);
                     clearDisconnectionTimer(game.player1.toString());
                     clearDisconnectionTimer((game.player2 as IUserModel).toString());
                     clearMoveTimer(gameId);
