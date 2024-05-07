@@ -4,7 +4,10 @@ COPY package*.json ./
 RUN npm install
 COPY .env.example .env
 COPY . .
-RUN npx dotenv -e .env -- npm run build
+
+RUN apk add --no-cache bash
+
+RUN source .env && npm run build
 
 FROM nginx:stable-alpine as runtime
 COPY --from=build /app/dist /usr/share/nginx/html
