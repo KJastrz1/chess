@@ -224,16 +224,16 @@ export default (io: SocketIOServer) => {
                     socket.to(gameId).emit('receiveGame', game);
                     await Game.findByIdAndUpdate(gameId, game);
                 }
-                else if ((game.status === GameStatus.WaitingForPlayer2 || game.status === GameStatus.WaitingForStart) && playerId === game.player1.toString()) {
+                else if ((game.status === GameStatus.WaitingForPlayer2 || game.status === GameStatus.WaitingForStart) && playerId === game.player1._id.toString()) {
                     await Game.findByIdAndDelete(gameId);
                 } else {
                     disconnectionTimers[playerId] = setTimeout(async () => {
                         socket.to(gameId).emit('playerLeft');
 
-                        game.winner = game.player1.toString() === playerId ? (game.player2 as IUserModel)._id : game.player1._id;
+                        game.winner = game.player1._id.toString() === playerId ? (game.player2 as IUserModel)._id : game.player1._id;
 
                         game.status = GameStatus.Finished;
-                        const loser = game.player1.toString() === playerId ? game.player1._id : (game.player2 as IUserModel)._id;
+                        const loser = game.player1._id.toString() === playerId ? game.player1._id : (game.player2 as IUserModel)._id;
                         try {
                             await updateEloRating(game.winner, loser);
                             await Game.findByIdAndUpdate(gameId, game);
