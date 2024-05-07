@@ -2,6 +2,7 @@ import axios, { AxiosError } from "axios";
 import { IGameHistoryParamsFrontend, IGameParamsFrontend, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
+console.log("API_URL", API_URL);
 axios.defaults.withCredentials = true;
 
 // ============================================================
