@@ -1,13 +1,13 @@
 FROM node:20-alpine as build
 WORKDIR /app
+
+ENV VITE_SOCKET_URL=http://localhost:3000
+ENV VITE_API_URL=http://localhost:3000/api/v1
+
 COPY package*.json ./
 RUN npm install
-COPY .env.example .env
 COPY . .
-
-RUN apk add --no-cache bash
-
-RUN source .env && npm run build
+RUN npm run build
 
 FROM nginx:stable-alpine as runtime
 COPY --from=build /app/dist /usr/share/nginx/html
