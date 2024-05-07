@@ -3,7 +3,7 @@
 1. **Download or clone the repository**
 
 2. **Run Docker Compose:**
-    docker compose up -d
+    `docker compose up -d`
 
 3. **Access the Frontend Application**
 
