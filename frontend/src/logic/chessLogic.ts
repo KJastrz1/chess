@@ -21,7 +21,7 @@ export const calculatePossibleMoves = (figure: White | Black, row: number, col: 
 
   const moves = [];
 
-  const isWhite = Object.values(White).includes(figure);
+  const isWhite = Object.values(White).includes(figure as White);
 
   const pawnDirection = isWhite ? -1 : 1;
   const opponentPieces = isWhite ? Black : White;
@@ -179,7 +179,7 @@ export const checkCapture = (possibleMoves: { row: number, col: number }[], sele
   if (!selectedPiece) return false;
   if (!checkIfPossibleMove(possibleMoves, destRow, destCol)) return false;
   const target = gameState[destRow][destCol];
-  return target !== "None" && (Object.values(White).includes(selectedPiece.figure) && Object.values(Black).includes(target) || Object.values(Black).includes(selectedPiece.figure) && Object.values(White).includes(target));
+  return target !== "None" && (Object.values(White).includes(selectedPiece.figure as White) && Object.values(Black).includes(target as Black) || Object.values(Black).includes(selectedPiece.figure as Black) && Object.values(White).includes(target as White));
 };
 
 export function findKingPosition(board: ChessSquare[][], player: "White" | "Black") {

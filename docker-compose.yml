@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: ghcr.io/kjastrz1/frontend:latest  
+    env_file:
+      - ./frontend/.env.example
+    ports:
+      - '5173:80'
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  backend:
+    image: ghcr.io/kjastrz1/backend:latest 
+    env_file:
+      - ./backend/.env.example
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  chessDB:
+    image: mongo:latest  
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:

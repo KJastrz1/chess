@@ -1,12 +1,15 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { IUser } from '../../../shared/types';
+
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser, logoutUser } from '@/lib/api';
+import { IUserResponse } from '@/types';
 
 export const initialUser = {
     _id: '',
     username: '',
-    email: ''
+    email: '',
+    eloRating: 0,
+    rankingPlace: null
 };
 
 const INITIAL_STATE = {
@@ -18,8 +21,8 @@ const INITIAL_STATE = {
 };
 
 type IContextType = {
-    user: IUser;
-    login: (userData: IUser) => void;
+    user: IUserResponse;
+    login: (userData: IUserResponse) => void;
     logout: () => void;
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -30,7 +33,7 @@ const AuthContext = createContext<IContextType>(INITIAL_STATE);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const navigate = useNavigate();
-    const [user, setUser] = useState<IUser>(initialUser);
+    const [user, setUser] = useState<IUserResponse>(initialUser);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -58,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
 
-    const login = (userData: IUser) => {
+    const login = (userData: IUserResponse) => {
         setUser(userData);
         setIsAuthenticated(true);
         navigate('/');

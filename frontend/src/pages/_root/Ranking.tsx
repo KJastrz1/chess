@@ -34,13 +34,13 @@ const Ranking = () => {
                 />
                 <div className="flex flex-row items-center gap-2 md:gap-4">
                     <Input
-                        type='number'
+                        type="number"
                         placeholder="Min ELO"
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange({ minEloRating: e.target.value })} />
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>  handleSearchChange({ minEloRating: Number(e.target.value) })} />
                     <Input
                         type="number"
                         placeholder="Max ELO"
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange({ maxEloRating: e.target.value })} />
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>   handleSearchChange({ maxEloRating: Number(e.target.value) })} />
                 </div>
                 <Button onClick={handleSearch}>Search</Button>
             </div>

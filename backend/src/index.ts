@@ -9,7 +9,7 @@ import swaggerDocs from './config/swagger';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import http from 'http';
-import { Server } from "socket.io"; 
+import { Server } from "socket.io";
 import { startCronJobs } from './services/scheduler';
 
 connectDB();
@@ -17,11 +17,11 @@ connectDB();
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
 app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true, 
+  origin: FRONTEND_URL,
+  credentials: true,
 }));
 
 app.use(express.json());
@@ -42,16 +42,13 @@ startCronJobs();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
+    origin: FRONTEND_URL,  
     allowedHeaders: "authorization, content-type",
     credentials: true
   }
 });
 
 setupSocket(io);
-
-
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

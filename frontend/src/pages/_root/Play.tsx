@@ -9,6 +9,7 @@ import Button from "@/components/Ui/Button";
 import LoadingButton from "@/components/Ui/LoadingButton";
 import { GameStatus, IGameListItem,  IGameParamsFrontend } from "@/types";
 import PageButtons from "@/components/Ui/PageButtons";
+import { toast } from "react-toastify";
 
 
 const Play = () => {
@@ -30,14 +31,14 @@ const Play = () => {
         navigate(`/game/${data._id}`);
     }
 
-    const handleJoin = async () => {
-        setActiveGameId(gameId);
-        if (!game) {
-            return;
-        }
+    const handleJoin =  () => {
+        setActiveGameId(gameId);       
     }
     useEffect(() => {
-        if (game) {
+        if(game && game.status !== GameStatus.WaitingForPlayer2){
+            toast.error("You can't join this game");
+        }
+        if (game && game.status === GameStatus.WaitingForPlayer2) {
             navigate(`/game/${game._id}`);
         }
     }, [game])

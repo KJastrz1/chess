@@ -10,7 +10,7 @@ import { useUserContext } from "@/context/AuthContext";
 import PageButtons from "@/components/Ui/PageButtons";
 
 const History = () => {
-    const { user } = useUserContext();
+    const { user } = useUserContext();    
     const navigate = useNavigate();
     const [gameResult, setGameResult] = useState("");
     const [tempParams, setTempParams] = useState<IGameHistoryParamsFrontend>({ status: GameStatus.Finished, page: 1, itemsPerPage: 20 });
@@ -26,7 +26,7 @@ const History = () => {
     };
 
     const handleResultChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const newResult = event.target.value;
+        const newResult = event.target.value as "draw" | "won" | "lost" | ""; 
         setGameResult(newResult);
         handleSearchChange({ result: newResult });
     };

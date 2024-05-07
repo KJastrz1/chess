@@ -1,5 +1,5 @@
-import axios from "axios";
-import { GameStatus, IGameHistoryParams, IGameHistoryParamsFrontend, IGameParams, IGameParamsFrontend, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from '@/types';
+import axios, { AxiosError } from "axios";
+import { IGameHistoryParamsFrontend, IGameParamsFrontend, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
@@ -76,14 +76,15 @@ export async function getGameById(gameId: string) {
     try {
         const response = await axios.get(`${API_URL}/games/${gameId}`);
         return response.data;
-    } catch (error) {
-        if (error.response && error.response.status === 404) {
-            throw new Error('Game not found');
-        } else if (error.response && error.response.status === 400) {
-            throw new Error('Invalid game ID format');
-        } else {
-            throw new Error('Failed to fetch game data');
+    } catch (error: unknown) {
+        if (error instanceof AxiosError) {
+            if (error.response && error.response.status === 404) {
+                throw new Error('Game not found');
+            } else if (error.response && error.response.status === 400) {
+                throw new Error('Invalid game ID format');
+            }
         }
+        throw new Error('Failed to fetch game data');
     }
 }
 

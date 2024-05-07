@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import {  User } from '../models/User';
-import { ILoginUserRequest, IRegisterUserRequest,  IRankingParams, IUserProfileResponse } from '@src/types';
+import { User } from '../models/User';
+import { ILoginUserRequest, IRegisterUserRequest, IRankingParams, IUserProfileResponse, IUserResponse } from '@src/types';
 import { AuthenticatedRequest } from '@src/types/express';
 import { getRankingPaginated } from '@src/services/UserService';
 
@@ -12,9 +12,8 @@ interface RegisterUserRequest extends Request {
     body: IRegisterUserRequest;
 }
 export const register = async (req: RegisterUserRequest, res: Response): Promise<void> => {
-    console.log('register');
-    const { username, email, password } = req.body;
     try {
+        const { username, email, password } = req.body;
         let user = await User.findOne({ email });
         if (user) {
             res.status(400).json({ message: 'Email already in use' });
@@ -30,7 +29,7 @@ export const register = async (req: RegisterUserRequest, res: Response): Promise
             email,
             password
         });
-        await user.save();
+        const savedUser = await user.save();
         const token = jwt.sign({ _id: user._id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
         res.cookie('jwtToken', token, {
             httpOnly: true,
@@ -39,10 +38,13 @@ export const register = async (req: RegisterUserRequest, res: Response): Promise
             maxAge: 604800000
         });
 
-        const userResponse = {
-            _id: user._id,
-            username: user.username,
-            email: user.email,
+        const userObject = user.toObject();
+        const userResponse: IUserResponse = {
+            _id: userObject._id.toString(),
+            username: userObject.username,
+            email: userObject.email,
+            eloRating: userObject.eloRating,
+            rankingPlace: userObject.rankingPlace || null
         };
         res.status(201).json({ userResponse });
     } catch (error) {
@@ -56,9 +58,9 @@ interface LoginUserRequest extends Request {
     body: ILoginUserRequest;
 }
 export const login = async (req: LoginUserRequest, res: Response) => {
-    console.log('login body: ', req.body);
-    const { email, password } = req.body;
     try {
+        console.log('login');
+        const { email, password } = req.body;
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
             return res.status(400).json({ message: 'Invalid credentials' });
@@ -76,12 +78,16 @@ export const login = async (req: LoginUserRequest, res: Response) => {
             sameSite: 'lax',
             maxAge: 604800000
         });
-        const userResponse = {
-            _id: user._id,
-            username: user.username,
-            email: user.email,
+
+        const userObject = user.toObject();
+        const userResponse: IUserResponse = {
+            _id: userObject._id.toString(),
+            username: userObject.username,
+            email: userObject.email,
+            eloRating: userObject.eloRating,
+            rankingPlace: userObject.rankingPlace || null
         };
-        res.status(201).json({ userResponse });
+        res.status(201).json(userResponse);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -90,8 +96,15 @@ export const login = async (req: LoginUserRequest, res: Response) => {
 
 
 export const getCurrentUser = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const user = req.user;
-    res.status(200).json(user);
+    const userObject = req.user.toObject();
+    const userResponse: IUserResponse = {
+        _id: userObject._id.toString(),
+        username: userObject.username,
+        email: userObject.email,
+        eloRating: userObject.eloRating,
+        rankingPlace: userObject.rankingPlace || null
+    };
+    res.status(200).json(userResponse);
 };
 
 
@@ -112,20 +125,22 @@ export interface GetProfileRequest extends AuthenticatedRequest {
         id: string;
     };
 }
-export const getProfile = async (req: GetProfileRequest, res: Response)=> {
+export const getProfile = async (req: GetProfileRequest, res: Response) => {
     console.log('getProfile');
     try {
         const user = await User.findById(req.params.id);
         if (!user) {
             res.status(404).json({ message: 'User not found' });
             return;
-        }      
-        const result:IUserProfileResponse = {
-            _id: user._id.toString(),
-            username: user.username,
-            eloRating: user.eloRating
-        };  
-        res.status(200).json(result);
+        }
+        const userObject = user.toObject();
+        const userResponse: IUserProfileResponse = {
+            _id: userObject._id.toString(),
+            username: userObject.username,
+            eloRating: userObject.eloRating,
+            rankingPlace: userObject.rankingPlace || null
+        };
+        res.status(200).json(userResponse);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -146,7 +161,7 @@ export interface GetRankingRequest extends AuthenticatedRequest {
     query: IRankingParams;
 }
 export async function getRanking(req: GetRankingRequest, res: Response) {
-    try {       
+    try {
         const result = await getRankingPaginated(req.query);
         res.json(result);
     }

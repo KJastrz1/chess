@@ -31,7 +31,7 @@ const LoginPage = () => {
         validationSchema={loginValidationSchema}
         onSubmit={async (values, { setSubmitting }) => {
           setSubmitting(true);
-          const user = await signin(values);
+          const user = await signin(values);       
           login(user);
           setSubmitting(false);
         }}

@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon",
-    "build": "tsc && tsc-alias",
-    "tsc": "tsc"
+    "build": "tsc && tsc-alias && npm run copy-yaml",
+    "copy-yaml": "cp -R src/docs dist/docs"   
   },
   "_moduleAliases": {
     "@src": "./src"

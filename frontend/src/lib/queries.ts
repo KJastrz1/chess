@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "react-query";
 import { QUERY_KEYS } from "./keysQuery";
 import { createGame, createUserAccount, getCurrentUser, getGameById, getGames, getWebSocketToken, signInAccount, getGamesHistory, getRanking } from "./api";
-import { IGameHistoryParams, IGameHistoryParamsFrontend, IGameParams, IGameParamsFrontend, ILoginUserRequest, IRankingParams, IRankingParamsFrontend, IRegisterUserRequest } from "@/types";
+import { IGameHistoryParamsFrontend, IGameParamsFrontend, IGameResponse, ILoginUserRequest, IRankingParamsFrontend, IRegisterUserRequest } from "@/types";
 import { toast } from "react-toastify";
 
 
@@ -94,7 +94,7 @@ export const useGetGamesHistory = (params: IGameHistoryParamsFrontend) => {
 }
 
 export const useGetGameById = (gameId: string, noRefetch?: boolean) => {
-    return useQuery({
+    return useQuery<IGameResponse, Error>({
         queryKey: [QUERY_KEYS.GET_GAME_BY_ID, gameId],
         queryFn: () => getGameById(gameId),
         enabled: !!gameId,
@@ -103,7 +103,7 @@ export const useGetGameById = (gameId: string, noRefetch?: boolean) => {
             toast.error(error.message);
             return;
         },
-        retry: (error) => {
+        retry: (error: unknown) => {
             if (error instanceof Error && error.message !== 'Game not found' && error.message !== 'Invalid game ID format') {
                 return true;
             }

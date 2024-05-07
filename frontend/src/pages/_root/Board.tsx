@@ -119,8 +119,8 @@ function Board() {
     if (!isPlayerTurn || game?.status !== GameStatus.InProgress || opponentLeft) {
       return;
     }
-    const isFigureWhite = Object.values(White).includes(figure);
-    let isOwnFigure = (isWhitePlayer && isFigureWhite) || (!isWhitePlayer && !isFigureWhite);
+    const isFigureWhite = figure in White && Object.values(White).includes(figure as White);
+    const isOwnFigure = (isWhitePlayer && isFigureWhite) || (!isWhitePlayer && !isFigureWhite);
     const isPossibleMove = checkIfPossibleMove(possibleMoves, row, col);
     if (isPossibleMove && selectedPiece) {
       const move: IMove = { srcRow: selectedPiece.currentRow, srcCol: selectedPiece.currentCol, destRow: row, destCol: col, figure: selectedPiece.figure };

@@ -55,7 +55,9 @@ export type IUserResponse = {
     username: string;
     email: string;
     eloRating: number;
+    rankingPlace: number | null;
 };
+
 export type ILoginUserRequest = {
     email: string;
     password: string;
@@ -71,7 +73,7 @@ export type IUserProfileResponse = {
     _id: string;
     username: string;
     eloRating: number;
-    rankingPlace?: number;
+    rankingPlace: number | null;
 };
 
 export type IRankingParams = {
@@ -142,7 +144,7 @@ export type IGameHistoryParams = {
     status: GameStatus.Finished;
     moveTime?: string;
     winner?: string;
-    result?: 'won' | 'lost' | 'draw';
+    result?: 'won' | 'lost' | 'draw' | '';
     opponentUsername?: string;
     page?: string;
     itemsPerPage?: string;
@@ -152,7 +154,7 @@ export type IGameHistoryParamsFrontend = {
     status: GameStatus.Finished;
     moveTime?: number;
     winner?: string;
-    result?: 'won' | 'lost' | 'draw';
+    result?: 'won' | 'lost' | 'draw' | '';
     opponentUsername?: string;
     page?: number;
     itemsPerPage?: number;
@@ -168,7 +170,7 @@ export type IMove = {
 
 export type IGameListItem = {
     _id: string;
-    player1: IUserProfileResponse;    
+    player1: IUserProfileResponse;
     moveTime: number;
 };
 
