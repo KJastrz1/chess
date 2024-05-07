@@ -116,10 +116,11 @@ function Board() {
   };
 
   const handleSqaureClick = (figure: ChessSquare, row: number, col: number): void => {
+    console.log("gracz kliknął na pole", figure, row, col,"i gra białymi?", isWhitePlayer)    
     if (!isPlayerTurn || game?.status !== GameStatus.InProgress || opponentLeft) {
       return;
     }
-    const isFigureWhite = figure in White && Object.values(White).includes(figure as White);
+    const isFigureWhite = Object.values(White).includes(figure as White);
     const isOwnFigure = (isWhitePlayer && isFigureWhite) || (!isWhitePlayer && !isFigureWhite);
     const isPossibleMove = checkIfPossibleMove(possibleMoves, row, col);
     if (isPossibleMove && selectedPiece) {
