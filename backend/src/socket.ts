@@ -87,11 +87,11 @@ export default (io: SocketIOServer) => {
                     game.player2Connected = true;
                 }
                 socket.data.gameId = gameId;
-                socket.join(gameId);       
-            
+                socket.join(gameId);
+
                 await Game.findByIdAndUpdate(gameId, game);
                 io.to(gameId).emit('receiveGame', game);
-                
+
             } catch (error) {
                 cb('Error joining the game');
             }
@@ -121,7 +121,7 @@ export default (io: SocketIOServer) => {
 
                 const player = game.whitePlayer.toString() === playerId ? 'White' : 'Black';
                 const opponent = player === 'White' ? 'Black' : 'White';
-           
+
                 if (!isMovePossible(game.board, move, player)) {
                     return;
                 }
@@ -132,12 +132,15 @@ export default (io: SocketIOServer) => {
 
                 if (isCheckmate(game.board, opponent)) {
                     game.winner = playerId === game.player1._id.toString() ? game.player1._id : game.player2._id;
+
+                    const loser = game.player1._id.toString() !== playerId ? game.player1._id : (game.player2 as IUserModel)._id;
                     game.status = GameStatus.Finished;
+                    await updateEloRating(game.winner, loser);
                     await Game.findByIdAndUpdate(gameId, game);
                     io.to(gameId).emit('receiveGame', game);
                     clearDisconnectionTimer(game.player1.toString());
                     clearDisconnectionTimer((game.player2 as IUserModel).toString());
-                    clearMoveTimer(gameId);                   
+                    clearMoveTimer(gameId);
                     return;
                 }
 
@@ -154,7 +157,7 @@ export default (io: SocketIOServer) => {
                 clearMoveTimer(gameId);
                 startMoveTimer(gameId, game.moveTime);
                 await Game.findByIdAndUpdate(gameId, game);
-                io.to(gameId).emit('receiveGame', gameToSend);                
+                io.to(gameId).emit('receiveGame', gameToSend);
             } catch (error) {
                 console.error(error);
             }
@@ -184,7 +187,7 @@ export default (io: SocketIOServer) => {
 
                     await Game.findByIdAndUpdate(gameId, game);
                     io.to(gameId).emit('receiveGame', game);
-                    
+
                 }
             } catch (error) {
                 console.error(error);
@@ -202,7 +205,7 @@ export default (io: SocketIOServer) => {
                 startMoveTimer(gameId, game.moveTime);
                 await Game.findByIdAndUpdate(gameId, game);
                 io.to(gameId).emit('receiveGame', game);
-           
+
             } catch (error) {
                 console.error(error);
             }
@@ -258,7 +261,7 @@ export default (io: SocketIOServer) => {
                         game.whosMove = game.whosMove.toString() === game.player1._id.toString() ? (game.player2 as IUserModel)._id : game.player1._id;
                         startMoveTimer(gameId, moveTime);
                         await Game.findByIdAndUpdate(gameId, game)
-                        io.to(gameId).emit('timeOut', { newTurn: game.whosMove });                       
+                        io.to(gameId).emit('timeOut', { newTurn: game.whosMove });
                     }
                 } catch (error) {
                     console.error(error);
