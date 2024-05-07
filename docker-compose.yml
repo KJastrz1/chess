@@ -18,8 +18,7 @@ services:
       - '3000:3000'
 
   chessDB:
-    image: mongo:latest  
-    command: --replSet myReplicaSet
+    image: mongo:latest 
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
