@@ -47,4 +47,4 @@ The game mechanics are designed to replicate the traditional chess experience wi
 <img src="img/game_history.png" width="800" height="800" alt="Game replay interface allowing users to review moves from a past game">
 
 **Players Ranking**
-<img src="img/ranking.png" width="800" height="700" alt="Leaderboard displaying player rankings based on Elo ratings">
+<img src="img/ranking.png" width="800" height="600" alt="Leaderboard displaying player rankings based on Elo ratings">
